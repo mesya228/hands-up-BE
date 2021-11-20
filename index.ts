@@ -12,9 +12,6 @@ app.listen(PORT, () => {
 	initRouters();
 	app.use(express.json());
 	app.use(router);
-	mongoose.connect(DB_URL, {
-		useNewUrlParser: true,
-		useUnifiedTopology: true,
-	});
+	mongoose.connect(DB_URL);
 	console.log(`Server listening at http://localhost:${PORT}`);
 });
