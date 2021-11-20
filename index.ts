@@ -1,12 +1,20 @@
 import express from 'express';
+import mongoose from 'mongoose';
 import { initRouters, router } from './src/router/router';
 const app = express();
 
-const port = process.env.PORT;
+const PORT = process.env.PORT || 8000;
+const DB_URL: string =
+	process.env.MONGO_URL ||
+	'mongodb+srv://admin:jHpkx@mesyacluster.jwf5l.mongodb.net/main?retryWrites=true&w=majority';
 
-app.listen(port, () => {
+app.listen(PORT, () => {
 	initRouters();
-  app.use(express.json());
+	app.use(express.json());
 	app.use(router);
-	console.log(`Server listening at http://localhost:${port}`);
+	mongoose.connect(DB_URL, {
+		useNewUrlParser: true,
+		useUnifiedTopology: true,
+	});
+	console.log(`Server listening at http://localhost:${PORT}`);
 });

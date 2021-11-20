@@ -1,3 +1,4 @@
 export * from './user'
 export * from './auth'
-export * from './map'
+export * from './generate'
+export * from './image'

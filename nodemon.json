@@ -1,5 +1,6 @@
 {
 	"env": {
-		"PORT": "8000"
+		"PORT": "8000",
+		"DB_URL": "mongodb+srv://admin:jHpkx@mesyacluster.jwf5l.mongodb.net/main?retryWrites=true&w=majority"
 	}
 }

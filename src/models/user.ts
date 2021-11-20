@@ -1,11 +1,15 @@
 import { Schema, model } from 'mongoose';
 
 const schema = new Schema({
-	id: {
+	email: {
 		type: String,
 		require: true,
 	},
-	instagramLink: {
+	username: {
+		type: String,
+		require: true,
+	},
+	password: {
 		type: String,
 		require: true,
 	},
@@ -14,7 +18,7 @@ const schema = new Schema({
 export const User = model('User', schema);
 
 export interface IUser {
-	username: string;
 	email: string;
+	username: string;
 	password: string;
 }

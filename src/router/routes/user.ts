@@ -5,9 +5,13 @@ const ROUTE_API = '/user';
 
 export const initUserRoutes = () => {
 	router.post(`/carplates`, (req, res) => {
-		console.log(req);
 		const carplates = getNumber();
-		console.log(carplates);
+		res.status(200).send(carplates);
+		return;
+	});
+	
+	router.post(`/carplates`, (req, res) => {
+		const carplates = getNumber();
 		res.status(200).send(carplates);
 		return;
 	});

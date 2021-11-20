@@ -5,49 +5,71 @@ const ROUTE_API = '/auth/';
 
 export const initAuthRoutes = () => {
 	router.post(ROUTE_API + 'sign-in', (req, res) => {
-		const { login, password } = req.body || {};
-		console.log(req);
-		console.log(req.body);
-		console.log('login', login);
-		console.log('password', password);
+		const { email, password } = req.body || {};
 
-		if (!login || !password) {
+		if (!email || !password) {
 			res.status(400).send({
-				data: 'Invalid login or password',
+				errors: ['Invalid login or password'],
 			});
 
 			return;
 		}
 
-		User.find({ login }, (err, user: IUser) => {
-			if (err) {
+		User.findOne({ email, password })
+			.then((user: IUser) => {
+				if (user) {
+					res.status(400).send({
+						data: user,
+					});
+					return;
+				}
+
 				res.status(400).send({
-					data: 'DB error',
+					errors: ['Invalid login or password'],
 				});
-
-				return;
-			}
-
-			console.log(user);
-			if (user) {
-				res.status(200).send({
-					data: 'success',
+			})
+			.catch(() => {
+				res.status(400).send({
+					errors: ['Invalid login or password'],
 				});
-
-				return;
-			}
-
-			res.status(400).send({
-				data: 'Invalid login or password',
 			});
-		});
 	});
 
 	router.post(ROUTE_API + 'sign-up', (req, res) => {
-		const { email, login, password } = req.body || {};
+		const { email, username, password } = req.body || {};
 
-		res.status(200).send({
-			data: 'test',
-		});
+		if (!email || !username || !password) {
+			res.status(400).send({
+				errors: ['Please provide email, username and password!'],
+			});
+			return;
+		}
+
+		User.findOne({ email, username })
+			.then((user: IUser) => {
+				if (user) {
+					res.status(400).send({
+						errors: ['User with such email or username already exist'],
+					});
+					return;
+				}
+
+				User.create({ email, username, password })
+					.then((createdUser) => {
+						res.status(200).send({
+							data: createdUser,
+						});
+					})
+					.catch(() => {
+						res.status(400).send({
+							errors: ['Error during sign up. Please, try later'],
+						});
+					});
+			})
+			.catch(() => {
+				res.status(400).send({
+					errors: ['Error during sign up. Please, try later'],
+				});
+			});
 	});
 };
