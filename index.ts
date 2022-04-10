@@ -6,7 +6,7 @@ const app = express();
 const PORT = process.env.PORT || 8000;
 const DB_URL: string =
 	process.env.MONGO_URL ||
-	'mongodb+srv://admin:jHpkx@mesyacluster.jwf5l.mongodb.net/main?retryWrites=true&w=majority';
+	'mongodb+srv://mesya:3bxmhWHMGizA2JPT@cluster0.ob5ev.mongodb.net/main?retryWrites=true&w=majority';
 
 app.listen(PORT, () => {
 	initRouters();
