@@ -5,15 +5,15 @@ const schema = new Schema({
     type: String,
     require: true,
   },
-  support: {
-    type: Boolean,
+  rate: {
+    type: Number,
     require: true,
   },
   state: {
     type: String,
     require: true,
   },
-  products: {
+  data: {
     type: Array,
     require: true,
   },
@@ -23,7 +23,7 @@ export const Company = model("Company", schema);
 
 export interface ICompany {
   name: string;
-  support: boolean;
+  rate: number;
   state: string;
-  products: Array<string>;
+  data: Array<string>;
 }
