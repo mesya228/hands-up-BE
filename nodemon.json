@@ -1,6 +1,9 @@
 {
-	"env": {
-		"PORT": "8000",
-		"DB_URL": "mongodb+srv://admin:jHpkx@mesyacluster.jwf5l.mongodb.net/main?retryWrites=true&w=majority"
-	}
+  "NODE_PATH": "/",
+  "env": {
+    "PORT": "8000",
+    "DB_URL": "mongodb+srv://admin:jHpkx@mesyacluster.jwf5l.mongodb.net/main?retryWrites=true&w=majority",
+    "ACCESS_TOKEN_HASH": "accessTest",
+    "REFRESH_TOKEN_HASH": "refreshTest"
+  }
 }

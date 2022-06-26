@@ -27,13 +27,11 @@ export const initCompanyRoutes = () => {
       { maxTimeMS: 2000 },
       (error, company) => {
         if (company) {
-          console.log("company", company);
           res.status(200).send({ data: company });
           return;
         }
 
         if (error) {
-          console.log("error", error);
           res.status(400).send({ error });
           return;
         }

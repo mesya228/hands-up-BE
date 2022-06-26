@@ -1,9 +1,30 @@
-import { User } from "../../models";
-import { router } from "../router";
+import { IUser, User } from '../../models';
+import { router } from '../router';
+import { getUserPublicProps, verifyAccessToken } from '../../utils';
 
-const ROUTE_API = "/user";
+const ROUTE_API = '/user';
 
 export const initUserRoutes = () => {
+  router.get(`${ROUTE_API}/:uuid`, async (req: any, res) => {
+    const uuid = req.params.uuid;
+    console.log('uuid', uuid);
+
+    if (!verifyAccessToken(req.headers.bearer, res)) {
+      return;
+    }
+
+    const user = await User.findOne({ uuid }).catch(() => {
+      res.status(404).send({ errors: ['Користувача не знайдено'] });
+    });
+
+    if (!user) {
+      res.status(404).send({ errors: ['Користувача не знайдено'] });
+      return;
+    }
+
+    res.status(200).send({ data: getUserPublicProps(user as IUser) });
+  });
+
   router.post(`${ROUTE_API}/:id/start`, (req, res) => {
     const userId = req.params.id;
 
@@ -29,7 +50,6 @@ export const initUserRoutes = () => {
             res.status(200).send(newUser);
           })
           .catch((e) => {
-            console.log(e);
             res.status(400).send({
               error: e,
             });
@@ -44,29 +64,15 @@ export const initUserRoutes = () => {
     });
   });
 
-  router.get(`${ROUTE_API}/:id`, async (req, res) => {
-    const id = req.params.id;
-
-    User.findOne({ id }).then((user: any) => {
-      if (user) {
-        res.status(200).send({ user });
-        return;
-      }
-
-      res.status(404).send();
-    });
-  });
-
   router.post(`${ROUTE_API}/:id/locations`, (req, res) => {
     const userId = req.params.id;
     const { location } = req.body || {};
-    console.log("location", location);
 
     User.updateOne(
       { id: userId },
       {
         $set: {
-          "items.$.locations": location,
+          'items.$.locations': location,
         },
       }
     );

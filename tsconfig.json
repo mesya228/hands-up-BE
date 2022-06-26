@@ -5,11 +5,7 @@
     "sourceMap": false,
     "outDir": "./dist",
     "baseUrl": "./",
-    "paths": {
-      "src/*": [
-        "src/*"
-      ]
-    },
+    "paths": {},
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,

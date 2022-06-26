@@ -1,75 +1,119 @@
 import { IUser, User } from '../../models';
 import { router } from '../router';
 
+import bcrypt from 'bcrypt';
+import { v4 as uuidv4 } from 'uuid';
+import { generateToken, getUserPublicProps } from '../../utils';
+
 const ROUTE_API = '/auth/';
+const SALT: number | any = process.env.SALT;
 
 export const initAuthRoutes = () => {
-	router.post(ROUTE_API + 'sign-in', (req, res) => {
-		const { email, password } = req.body || {};
+  /**
+   * Sign in
+   */
+  router.post(ROUTE_API + 'sign-in', async (req, res) => {
+    const { email, password } = req.body || {};
 
-		if (!email || !password) {
-			res.status(400).send({
-				errors: ['Invalid login or password'],
-			});
+    if (!email || !password) {
+      res.status(400).json({
+        errors: ['Неправильні пошта або пароль'],
+      });
 
-			return;
-		}
+      return;
+    }
 
-		User.findOne({ email, password })
-			.then((user: IUser) => {
-				if (user) {
-					res.status(400).send({
-						data: user,
-					});
-					return;
-				}
+    const user = await User.findOne({ email }).catch((e) => {
+      res.status(400).json({
+        errors: ['Помилка системи, спробуйте пізніше!'],
+      });
+    });
 
-				res.status(400).send({
-					errors: ['Invalid login or password'],
-				});
-			})
-			.catch(() => {
-				res.status(400).send({
-					errors: ['Invalid login or password'],
-				});
-			});
-	});
+    if (user) {
+      bcrypt.compare(
+        password,
+        user.password || '',
+        async (err: any, passwordsMatch: boolean) => {
+          if (passwordsMatch) {
+            const token = await generateToken(user as IUser).catch(() => null);
 
-	router.post(ROUTE_API + 'sign-up', (req, res) => {
-		const { email, username, password } = req.body || {};
+            if (token) {
+              res.status(200).json({
+                data: { user: getUserPublicProps(user as IUser), token },
+              });
 
-		if (!email || !username || !password) {
-			res.status(400).send({
-				errors: ['Please provide email, username and password!'],
-			});
-			return;
-		}
+              return;
+            }
 
-		User.findOne({ email, username })
-			.then((user: IUser) => {
-				if (user) {
-					res.status(400).send({
-						errors: ['User with such email or username already exist'],
-					});
-					return;
-				}
+            res.status(400).json({
+              errors: ['Помилка системи, спробуйте пізніше!'],
+            });
+            return;
+          }
 
-				User.create({ email, username, password })
-					.then((createdUser) => {
-						res.status(200).send({
-							data: createdUser,
-						});
-					})
-					.catch(() => {
-						res.status(400).send({
-							errors: ['Error during sign up. Please, try later'],
-						});
-					});
-			})
-			.catch(() => {
-				res.status(400).send({
-					errors: ['Error during sign up. Please, try later'],
-				});
-			});
-	});
+          res.status(400).json({
+            errors: ['Неправильні пошта або пароль'],
+          });
+        }
+      );
+
+      return;
+    }
+
+    res.status(400).json({
+      errors: ['Неправильні пошта або пароль'],
+    });
+  });
+
+  /**
+   * Sign up
+   */
+  router.post(ROUTE_API + 'sign-up', async (req, res) => {
+    const { email, password } = req.body || {};
+
+    if (!email || !password) {
+      res.status(400).json({
+        errors: ['Неправильні пошта або пароль'],
+      });
+      return;
+    }
+
+    const user = await User.findOne({ email }).catch(() => {
+      res.status(400).json({
+        errors: ['Помилка системи, спробуйте пізніше'],
+      });
+    });
+
+    if (user) {
+      res.status(400).json({
+        errors: ['Користувач з такими даними вже є'],
+      });
+      return;
+    }
+
+    bcrypt.genSalt(SALT, async (err: any, salt: string) => {
+      bcrypt.hash(password, salt, async (err: any, hashedPassword: string) => {
+        const newUser = await User.create({
+          uuid: uuidv4(),
+          email,
+          password: hashedPassword,
+          roles: ['student'],
+        }).catch(() => {
+          res.status(400).json({
+            errors: ['Помилка системи, спробуйте пізніше'],
+          });
+        });
+
+        if (!newUser) {
+          res.status(400).json({
+            errors: ['Помилка системи, спробуйте пізніше'],
+          });
+        }
+
+        res.status(201).json({
+          data: getUserPublicProps(newUser as IUser),
+        });
+      });
+    });
+  });
 };
