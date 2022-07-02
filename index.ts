@@ -3,15 +3,13 @@ import mongoose from 'mongoose';
 import { initRouters, router } from './src/router/router';
 const app = express();
 
-const PORT = process.env.PORT || 8000;
-const DB_URL: string =
-	process.env.MONGO_URL ||
-	'mongodb+srv://mesya:3bxmhWHMGizA2JPT@cluster0.ob5ev.mongodb.net/main?retryWrites=true&w=majority';
+const PORT = process.env.PORT;
+const DB_URL = process.env.DB_URL as string;
 
 app.listen(PORT, () => {
-	initRouters();
-	app.use(express.json());
-	app.use(router);
-	mongoose.connect(DB_URL);
-	console.log(`Server listening at http://localhost:${PORT}`);
+  initRouters();
+  app.use(express.json());
+  app.use(router);
+  mongoose.connect(DB_URL);
+  console.log(`Server listening at ${PORT} port`);
 });
