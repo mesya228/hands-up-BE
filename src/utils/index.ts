@@ -1,3 +1,3 @@
 export * from './generateToken';
 export * from './verifyToken';
-export * from './getUserProps';
+export * from './getPublicProps';

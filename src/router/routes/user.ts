@@ -7,7 +7,6 @@ const ROUTE_API = '/user';
 export const initUserRoutes = () => {
   router.get(`${ROUTE_API}/:uuid`, async (req: any, res) => {
     const uuid = req.params.uuid;
-    console.log('uuid', uuid);
 
     if (!verifyAccessToken(req.headers.bearer, res)) {
       return;

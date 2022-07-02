@@ -1,16 +1,21 @@
 import jwt from 'jsonwebtoken';
-import { IUser } from 'src/models';
+import { IUser } from '../../src/models';
 import { UserToken } from '../models/token';
 
 export const generateToken = async (user: IUser) => {
   try {
-    const payload = { uuid: user.uuid, roles: user.roles };
+    const payload = {
+      uuid: user.uuid,
+      email: user.email,
+      roles: user.roles,
+      state: user.state,
+    };
 
     const accessToken = jwt.sign(
       payload,
       process.env.ACCESS_TOKEN_HASH || 'publicAccess',
       {
-        expiresIn: '5m',
+        expiresIn: '30m',
       }
     );
     const refreshToken = jwt.sign(
@@ -24,7 +29,7 @@ export const generateToken = async (user: IUser) => {
     const userToken = await UserToken.findOne({ uuid: user.uuid });
     if (userToken) await userToken.remove();
 
-    await new UserToken({ uuid: user.uuid, token: refreshToken }).save();
+    await UserToken.create({ uuid: user.uuid, token: refreshToken });
     return Promise.resolve({ accessToken, refreshToken });
   } catch (err) {
     return Promise.reject(err);

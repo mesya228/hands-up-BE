@@ -7,15 +7,6 @@ export const initCompanyRoutes = () => {
   router.post(ROUTE_API + `/getStatus`, (req, res) => {
     const { query } = req.body || {};
 
-    console.log(query);
-
-    // Company.updateMany( { data: '[]' }, { $unset: {data: [''] }}, { multi: true } ).then(res => {
-    //   console.log(res);
-    // });
-
-    // res.status(200).send({ data: [] });
-
-    // return;
     Company.find(
       {
         $or: [

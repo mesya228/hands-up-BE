@@ -5,10 +5,21 @@ import { TokenErrors } from '../enums';
 
 export const verifyAccessToken = (
   accessToken: string,
-  res: Response
+  res: Response,
+  registrationState?: boolean
 ): boolean => {
   if (!accessToken) {
     res.status(404).send({ errors: ['Токен відсутній'] });
+    return false;
+  }
+
+  const decodedToken = jwt.decode(accessToken) as any;
+
+  if (
+    (!registrationState && decodedToken && decodedToken.state === 'pending') ||
+    (registrationState && decodedToken && decodedToken.state === 'complete')
+  ) {
+    res.status(400).send({ errors: ['У доступі відмовлено'] });
     return false;
   }
 
@@ -23,7 +34,7 @@ export const verifyAccessToken = (
         return;
       }
 
-      isValid = true;
+      isValid = false;
 
       const handler = tokenErrorHandlers[tokenResponse.name];
       if (handler) {
@@ -31,7 +42,6 @@ export const verifyAccessToken = (
       }
     }
   );
-
 
   return isValid;
 };
@@ -63,6 +73,10 @@ const tokenErrorHandlers: IErrorHandlers = {
   },
   [TokenErrors.JsonWebTokenError]: {
     errors: ['Неправильний формат токена'],
+    code: 400,
+  },
+  [TokenErrors.NotBeforeError]: {
+    errors: ['Помилка системи'],
     code: 400,
   },
 };

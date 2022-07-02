@@ -1,9 +1,14 @@
 import { Router } from 'express';
-import { initAuthRoutes, initUserRoutes } from './routes';
+import { initAuthRoutes, initSchoolRoutes, initUserRoutes } from './routes';
 import { initTokenRoutes } from './routes/token';
 
 export const router: Router = Router();
 
-const routes = [initAuthRoutes, initTokenRoutes, initUserRoutes];
+const routes = [
+  initAuthRoutes,
+  initTokenRoutes,
+  initUserRoutes,
+  initSchoolRoutes,
+];
 
 export const initRouters = () => routes.forEach((route) => route());
