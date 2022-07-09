@@ -7,7 +7,7 @@ const ROUTE_API = '/school';
 
 export const initSchoolRoutes = () => {
   router.get(`${ROUTE_API}`, async (req: any, res) => {
-    if (!verifyAccessToken(req.headers.bearer, res)) {
+    if (!verifyAccessToken(req.headers.authorization, res)) {
       return;
     }
 
@@ -34,7 +34,7 @@ export const initSchoolRoutes = () => {
       return;
     }
 
-    if (!verifyAccessToken(req.headers.bearer, res)) {
+    if (!verifyAccessToken(req.headers.authorization, res)) {
       return;
     }
 

@@ -198,7 +198,7 @@ export const initAuthRoutes = () => {
       return;
     }
 
-    if (!verifyAccessToken(req.headers.bearer, res, true)) {
+    if (!verifyAccessToken(req.headers.authorization, res, true)) {
       return;
     }
 
