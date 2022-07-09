@@ -1,6 +1,10 @@
-import { IUser, User } from '../../models';
+import { ISchool, IUser, School, User } from '../../models';
 import { router } from '../router';
-import { getUserPublicProps, verifyAccessToken } from '../../utils';
+import {
+  getSchoolPublicProps,
+  getUserPublicProps,
+  verifyAccessToken,
+} from '../../utils';
 
 const ROUTE_API = '/user';
 
@@ -19,6 +23,17 @@ export const initUserRoutes = () => {
     if (!user) {
       res.status(404).send({ errors: ['Користувача не знайдено'] });
       return;
+    }
+
+    console.log(user.school);
+    if (user.school) {
+      const school = (await School.findOne({ id: user.school }).catch(
+        () => null
+      )) as ISchool;
+
+      if (school) {
+        user.school = getSchoolPublicProps(school);
+      }
     }
 
     res.status(200).send({ data: getUserPublicProps(user as IUser) });

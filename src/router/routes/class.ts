@@ -1,26 +1,26 @@
 import { router } from '../router';
 import { getSchoolPublicProps, verifyAccessToken } from '../../utils';
-import { ISchool, School } from '../../models';
+import { IClass, Class } from '../../models';
 import { v4 as uuidv4 } from 'uuid';
 
-const ROUTE_API = '/school';
+const ROUTE_API = '/class';
 
-export const initSchoolRoutes = () => {
+export const initClassRoutes = () => {
   router.get(`${ROUTE_API}`, async (req: any, res) => {
     if (!verifyAccessToken(req.headers.bearer, res)) {
       return;
     }
 
-    const schools = await School.find({}).catch(() => null);
+    const classes = await Class.find({}).catch(() => null);
 
-    if (!schools) {
-      res.status(404).send({ errors: ['Школу не знайдено'] });
+    if (!classes) {
+      res.status(404).send({ errors: ['Клас не знайдено'] });
       return;
     }
 
     res.status(200).send({
-      data: (schools as ISchool[]).map((school) =>
-        getSchoolPublicProps(school)
+      data: (classes as IClass[]).map((classItem) =>
+        getSchoolPublicProps(classItem)
       ),
     });
   });
@@ -38,21 +38,21 @@ export const initSchoolRoutes = () => {
       return;
     }
 
-    const school = await School.findOne({ name: parsedName }).catch(() => {
+    const foundClass = await Class.findOne({ name: parsedName }).catch(() => {
       res.status(404).send({ errors: ['Помилка системи, спробуйте пізніше!'] });
     });
 
-    if (school) {
-      res.status(400).send({ errors: ['Школа з такою назвою вже існує'] });
+    if (foundClass) {
+      res.status(400).send({ errors: ['Клас з такою назвою вже існує'] });
       return;
     }
 
-    const newSchool = await School.create({ id: uuidv4(), name }).catch(() => {
+    const newClass = await Class.create({ id: uuidv4(), name }).catch(() => {
       res.status(400).send({ errors: ['Помилка системи, спробуйте пізніше!'] });
     });
 
-    if (newSchool) {
-      res.status(200).send({ data: getSchoolPublicProps(newSchool) });
+    if (newClass) {
+      res.status(200).send({ data: getSchoolPublicProps(newClass) });
     }
   });
 };
