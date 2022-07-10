@@ -1,4 +1,6 @@
 import { Schema, model } from 'mongoose';
+import { IClass } from './class';
+import { ISchool } from './school';
 
 const userSchema = new Schema({
   uuid: {
@@ -45,17 +47,13 @@ const userSchema = new Schema({
     type: Object,
     require: false,
   },
-  classes: {
-    require: false,
-    type: Object,
-  },
   phone: {
     require: false,
     type: String,
   },
-  class: {
-    require: false,
-    type: Object,
+  classes: {
+    require: true,
+    type: Array<String>,
   },
 });
 
@@ -74,26 +72,12 @@ export interface IUser {
   username?: string;
 
   state?: 'registered' | 'pending';
-  school?: ISchool;
+  school?: string;
+  classes?: string[];
 }
 
 export interface ITeacher extends IUser {
-  classes: IClass[];
   phone: string;
 }
 
-export interface IStudent extends IUser {
-  class: IClass;
-}
-
-interface IClass {
-  id: string;
-  name: string;
-  users?: IUser[];
-}
-
-interface ISchool {
-  id: string;
-  name: string;
-  classes: IClass[];
-}
+export interface IStudent extends IUser {}

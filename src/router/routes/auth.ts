@@ -9,6 +9,7 @@ import {
   getUserPublicProps,
   verifyAccessToken,
 } from '../../utils';
+import { Response } from 'express';
 
 const ROUTE_API = '/auth';
 const SALT: number | any = process.env.SALT;
@@ -28,11 +29,11 @@ export const initAuthRoutes = () => {
       return;
     }
 
-    const user = await User.findOne({ email }).catch((e) => {
+    const user = (await User.findOne({ email }).catch((e) => {
       res.status(400).json({
         errors: ['Помилка системи, спробуйте пізніше!'],
       });
-    });
+    })) as IUser;
 
     if (user) {
       bcrypt.compare(
@@ -40,6 +41,11 @@ export const initAuthRoutes = () => {
         user.password || '',
         async (err: any, passwordsMatch: boolean) => {
           if (passwordsMatch) {
+            if (user.state === 'pending') {
+              getRegistrationData(user, res);
+              return;
+            }
+
             const token = await generateToken(user as IUser).catch(() => null);
 
             if (token) {
@@ -136,11 +142,11 @@ export const initAuthRoutes = () => {
       res.status(400).json({
         errors: ['Помилка системи, спробуйте пізніше'],
       });
-    });
+    }) as IUser;
 
     if (user) {
       res.status(400).json({
-        errors: ['Користувач з такою поштою вже зареєстрован'],
+        errors: ['Користувач з такою поштою вже зареєстрований'],
       });
       return;
     }
@@ -161,27 +167,7 @@ export const initAuthRoutes = () => {
           return;
         }
 
-        const accessToken = jwt.sign(
-          {
-            uuid: newUser.uuid,
-            roles: newUser.roles,
-            email: newUser.email,
-            state: newUser.state,
-          },
-          process.env.ACCESS_TOKEN_HASH || 'publicAccess',
-          {
-            expiresIn: '30m',
-          }
-        );
-
-        res.status(201).json({
-          data: {
-            user: {
-              uuid: newUser.uuid,
-            },
-            token: { accessToken },
-          },
-        });
+        getRegistrationData(newUser, res);
       });
     });
   });
@@ -191,6 +177,7 @@ export const initAuthRoutes = () => {
    */
   router.patch(`${ROUTE_API}/sign-up-finish/:uuid`, async (req: any, res) => {
     const { uuid } = req.params || {};
+
     const { name, surname, thirdname, school } = req.body || {};
 
     if (!name || !surname || !thirdname || !school) {
@@ -202,20 +189,54 @@ export const initAuthRoutes = () => {
       return;
     }
 
-    const user = await User.updateOne({
-      uuid,
-      name,
-      surname,
-      thirdname,
-      school,
-      state: 'registered',
-    }).catch(() => null);
+    const user = (await User.findOneAndUpdate(
+      { uuid },
+      {
+        name,
+        surname,
+        thirdname,
+        school,
+        state: 'registered',
+      }
+    ).catch(() => null)) as IUser;
 
     if (!user) {
       res.status(404).send({ errors: ['Користувача не знайдено'] });
       return;
     }
 
-    res.status(200).send({ data: true });
+    const token = await generateToken(user as IUser).catch(() => null);
+
+    res.status(200).send({
+      user: getUserPublicProps(user),
+      data: {
+        token,
+      },
+    });
   });
 };
+
+function getRegistrationData(user: IUser, res: Response) {
+  const accessToken = jwt.sign(
+    {
+      uuid: user.uuid,
+      roles: user.roles,
+      email: user.email,
+      state: user.state,
+    },
+    process.env.ACCESS_TOKEN_HASH || 'publicAccess',
+    {
+      expiresIn: '30m',
+    }
+  );
+
+  res.status(201).json({
+    data: {
+      completeRegister: true,
+      user: {
+        uuid: user.uuid,
+      },
+      token: { accessToken },
+    },
+  });
+}

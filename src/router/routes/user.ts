@@ -25,7 +25,6 @@ export const initUserRoutes = () => {
       return;
     }
 
-    console.log(user.school);
     if (user.school) {
       const school = (await School.findOne({ id: user.school }).catch(
         () => null
