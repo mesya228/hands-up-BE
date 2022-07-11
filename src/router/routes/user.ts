@@ -5,89 +5,51 @@ import {
   getUserPublicProps,
   verifyAccessToken,
 } from '../../utils';
+import { Request, Response } from 'express';
 
-const ROUTE_API = '/user';
+export class UserRoutes {
+  private readonly ROUTE_API = '/user';
 
-export const initUserRoutes = () => {
-  router.get(`${ROUTE_API}/:uuid`, async (req: any, res) => {
+  constructor() {
+    this.initRoutes();
+  }
+
+  private initRoutes() {
+    router.get(`${this.ROUTE_API}/:uuid`, this.getUserById.bind(this));
+  }
+
+  /**
+   * Find user by uuid
+   * 
+   * @param  {Request} req
+   * @param  {Response} res
+   */
+  private async getUserById(req: Request, res: Response) {
     const uuid = req.params.uuid;
-
-    if (!verifyAccessToken(req.headers.authorization, res)) {
-      return;
-    }
-
-    const user = await User.findOne({ uuid }).catch(() => {
-      res.status(404).send({ errors: ['Користувача не знайдено'] });
-    });
-
-    if (!user) {
-      res.status(404).send({ errors: ['Користувача не знайдено'] });
-      return;
-    }
-
-    if (user.school) {
-      const school = (await School.findOne({ id: user.school }).catch(
-        () => null
-      )) as ISchool;
-
-      if (school) {
-        user.school = getSchoolPublicProps(school);
-      }
-    }
-
-    res.status(200).send({ data: getUserPublicProps(user as IUser) });
-  });
-
-  router.post(`${ROUTE_API}/:id/start`, (req, res) => {
-    const userId = req.params.id;
-
-    User.findOne({ id: userId }, {}, {}, (error, user) => {
-      if (error) {
-        res.status(400).send({ error });
+  
+      if (!verifyAccessToken(req.headers.authorization, res)) {
         return;
       }
-
-      if (user) {
-        return;
-      }
-    });
-  });
-
-  router.post(`${ROUTE_API}`, async (req, res) => {
-    const { id, instagramLink } = req.body || {};
-
-    User.findOne({ id }).then((user: any) => {
-      if (!user) {
-        User.create({ id, instagramLink })
-          .then((newUser) => {
-            res.status(200).send(newUser);
-          })
-          .catch((e) => {
-            res.status(400).send({
-              error: e,
-            });
-          });
-
-        return;
-      }
-
-      User.updateOne({ id }, { instagramLink }).then((newUser: any) => {
-        res.status(200).send(newUser);
+  
+      const user = await User.findOne({ uuid }).catch(() => {
+        res.status(404).send({ errors: ['Користувача не знайдено'] });
       });
-    });
-  });
-
-  router.post(`${ROUTE_API}/:id/locations`, (req, res) => {
-    const userId = req.params.id;
-    const { location } = req.body || {};
-
-    User.updateOne(
-      { id: userId },
-      {
-        $set: {
-          'items.$.locations': location,
-        },
+  
+      if (!user) {
+        res.status(404).send({ errors: ['Користувача не знайдено'] });
+        return;
       }
-    );
-  });
-};
+  
+      if (user.school) {
+        const school = (await School.findOne({ id: user.school }).catch(
+          () => null
+        )) as ISchool;
+  
+        if (school) {
+          user.school = getSchoolPublicProps(school);
+        }
+      }
+  
+      res.status(200).send({ data: getUserPublicProps(user as IUser) });
+  }
+}

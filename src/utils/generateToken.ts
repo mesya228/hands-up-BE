@@ -11,13 +11,7 @@ export const generateToken = async (user: IUser) => {
       state: user.state,
     };
 
-    const accessToken = jwt.sign(
-      payload,
-      process.env.ACCESS_TOKEN_HASH || 'publicAccess',
-      {
-        expiresIn: '30m',
-      }
-    );
+    const accessToken = generateAccessToken(payload);
     const refreshToken = jwt.sign(
       payload,
       process.env.REFRESH_TOKEN_HASH || 'publicRefresh',
@@ -36,4 +30,21 @@ export const generateToken = async (user: IUser) => {
   }
 };
 
-export default generateToken;
+export const generateAccessToken = async (payload: ITokenPayload | any) => {
+  const { uuid, email, roles, state } = payload;
+
+  return jwt.sign(
+    { uuid, email, roles, state },
+    process.env.ACCESS_TOKEN_HASH || 'publicAccess',
+    {
+      expiresIn: '30m',
+    }
+  );
+};
+
+interface ITokenPayload {
+  uuid: string;
+  email: string;
+  roles: string[];
+  state: string;
+}

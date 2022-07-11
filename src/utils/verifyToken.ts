@@ -4,7 +4,7 @@ import { Response } from 'express';
 import { TokenErrors } from '../enums';
 
 export const verifyAccessToken = (
-  accessToken: string,
+  accessToken: string | undefined,
   res: Response,
   registrationState?: boolean
 ): boolean => {

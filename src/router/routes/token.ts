@@ -1,20 +1,30 @@
 import { router } from '../router';
 
-import jwt from 'jsonwebtoken';
-import { verifyRefreshToken } from '../../utils';
+import { generateAccessToken, verifyRefreshToken } from '../../utils';
 import { UserToken } from '../../models/token';
+import { Request, Response } from 'express';
 
-const ROUTE_API = '/token/';
+export class TokenRoutes {
+  private readonly ROUTE_API = '/token';
 
-export const initTokenRoutes = () => {
-  router.post(ROUTE_API + 'test', async (req, res) => {
-    return res.status(200).json('I LOVE YOu');
-  });
+  constructor() {
+    this.initRoutes();
+  }
+
+  private initRoutes() {
+    router.post(`${this.ROUTE_API}/test`, async (req, res) => {
+      return res.status(200).json('I LOVE YOu');
+    });
+
+    router.post(`${this.ROUTE_API}/refresh`, this.refreshToken.bind(this));
+    router.post(`${this.ROUTE_API}/delete`, this.deleteToken.bind(this));
+  }
 
   /**
-   * Refresh access token
+   * @param  {Request} req
+   * @param  {Response} res
    */
-  router.post(ROUTE_API + 'refresh', async (req, res) => {
+  private async refreshToken(req: Request, res: Response) {
     const { refreshToken } = req.body || {};
 
     if (!refreshToken) {
@@ -27,27 +37,20 @@ export const initTokenRoutes = () => {
       return res.status(400).json({ errors: ['Неправильний токен'] });
     }
 
-    const payload = {
-      uuid: token.uuid,
-      roles: token.roles,
-      email: token.email,
-    };
-
-    const accessToken = jwt.sign(payload, process.env.ACCESS_TOKEN_HASH || '', {
-      expiresIn: '30m',
-    });
+    const accessToken = generateAccessToken(token);
 
     res.status(200).json({
       data: {
         accessToken,
       },
     });
-  });
-
+  }
+  
   /**
-   * Sign up
+   * @param  {Request} req
+   * @param  {Response} res
    */
-  router.post(ROUTE_API + 'delete', async (req, res) => {
+  private async deleteToken(req: Request, res: Response) {
     try {
       const { refreshToken } = req.body || {};
 
@@ -68,5 +71,5 @@ export const initTokenRoutes = () => {
     } catch (err) {
       res.status(500).json({ data: { success: false } });
     }
-  });
-};
+  }
+}

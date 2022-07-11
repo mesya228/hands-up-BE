@@ -3,22 +3,38 @@ import { router } from '../router';
 
 import bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
-import jwt from 'jsonwebtoken';
 import {
+  generateAccessToken,
   generateToken,
   getUserPublicProps,
   verifyAccessToken,
 } from '../../utils';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 
-const ROUTE_API = '/auth';
-const SALT: number | any = process.env.SALT;
+export class AuthRoutes {
+  private readonly ROUTE_API = '/auth';
+  private readonly SALT: number | any = process.env.SALT;
 
-export const initAuthRoutes = () => {
+  constructor() {
+    this.initRoutes();
+  }
+
+  private initRoutes() {
+    router.post(`${this.ROUTE_API}/sign-in`, this.signIn.bind(this));
+    router.post(`${this.ROUTE_API}/sign-up-start`, this.signUpStart.bind(this));
+    router.patch(
+      `${this.ROUTE_API}/sign-up-finish/:uuid`,
+      this.signUpFinish.bind(this)
+    );
+  }
+
   /**
    * Sign in
+   *
+   * @param  {Request} req
+   * @param  {Response} res
    */
-  router.post(`${ROUTE_API}/sign-in`, async (req, res) => {
+  private async signIn(req: Request, res: Response) {
     const { email, password } = req.body || {};
 
     if (!email || !password) {
@@ -29,44 +45,22 @@ export const initAuthRoutes = () => {
       return;
     }
 
-    const user = (await User.findOne({ email }).catch((e) => {
-      res.status(400).json({
-        errors: ['Помилка системи, спробуйте пізніше!'],
-      });
-    })) as IUser;
+    const user = await this.getUserByEmail(email);
 
     if (user) {
-      bcrypt.compare(
+      const isPasswordsMatch = await this.comparePasswords(
         password,
-        user.password || '',
-        async (err: any, passwordsMatch: boolean) => {
-          if (passwordsMatch) {
-            if (user.state === 'pending') {
-              getRegistrationData(user, res);
-              return;
-            }
-
-            const token = await generateToken(user as IUser).catch(() => null);
-
-            if (token) {
-              res.status(200).json({
-                data: { user: getUserPublicProps(user as IUser), token },
-              });
-
-              return;
-            }
-
-            res.status(400).json({
-              errors: ['Помилка системи, спробуйте пізніше!'],
-            });
-            return;
-          }
-
-          res.status(400).json({
-            errors: ['Неправильні пошта або пароль'],
-          });
-        }
+        user.password
       );
+
+      if (isPasswordsMatch) {
+        await this.proceedSignIn(res, user);
+        return;
+      }
+
+      res.status(400).json({
+        errors: ['Неправильні пошта або пароль'],
+      });
 
       return;
     }
@@ -74,12 +68,15 @@ export const initAuthRoutes = () => {
     res.status(400).json({
       errors: ['Неправильні пошта або пароль'],
     });
-  });
+  }
 
   /**
-   * Sign up
+   * Start sign up
+   *
+   * @param  {Request} req
+   * @param  {Response} res
    */
-  router.post(`${ROUTE_API}/sign-up`, async (req, res) => {
+  private async signUpStart(req: Request, res: Response) {
     const { email, password } = req.body || {};
 
     if (!email || !password) {
@@ -89,93 +86,62 @@ export const initAuthRoutes = () => {
       return;
     }
 
-    const user = await User.findOne({ email }).catch(() => {
-      res.status(400).json({
-        errors: ['Помилка системи, спробуйте пізніше'],
-      });
-    });
+    const user = await this.getUserByEmail(email);
 
     if (user) {
-      res.status(400).json({
-        errors: ['Користувач з такими даними вже є'],
-      });
-      return;
-    }
+      if (this.handleSignUpPending(res, user, password)) {
+        return;
+      }
 
-    bcrypt.genSalt(SALT, async (err: any, salt: string) => {
-      bcrypt.hash(password, salt, async (err: any, hashedPassword: string) => {
-        const newUser = await User.create({
-          uuid: uuidv4(),
-          email,
-          password: hashedPassword,
-          roles: ['teacher'],
-        }).catch(() => null);
-
-        if (!newUser) {
-          res.status(400).json({
-            errors: ['Помилка системи, спробуйте пізніше'],
-          });
-          return;
-        }
-
-        res.status(201).json({
-          data: getUserPublicProps(newUser as IUser),
-        });
-      });
-    });
-  });
-
-  /**
-   * Sign up start
-   */
-  router.post(`${ROUTE_API}/sign-up-start`, async (req, res) => {
-    const { email, password } = req.body || {};
-
-    if (!email || !password) {
-      res.status(400).json({
-        errors: ['Неправильні пошта або пароль'],
-      });
-      return;
-    }
-
-    const user = await User.findOne({ email }).catch(() => {
-      res.status(400).json({
-        errors: ['Помилка системи, спробуйте пізніше'],
-      });
-    }) as IUser;
-
-    if (user) {
       res.status(400).json({
         errors: ['Користувач з такою поштою вже зареєстрований'],
       });
       return;
     }
 
-    bcrypt.genSalt(SALT, async (err: any, salt: string) => {
-      bcrypt.hash(password, salt, async (err: any, hashedPassword: string) => {
-        const newUser = (await User.create({
-          uuid: uuidv4(),
-          email,
-          password: hashedPassword,
-          roles: ['teacher'],
-        }).catch(() => null)) as IUser;
-
-        if (!newUser) {
-          res.status(400).json({
-            errors: ['Помилка системи, спробуйте пізніше'],
-          });
-          return;
-        }
-
-        getRegistrationData(newUser, res);
-      });
-    });
-  });
+    this.createNewUser(res, password, email);
+  }
 
   /**
-   * Sign up finish
+   * @param  {Response} res
+   * @param  {string} password
+   * @param  {string} email
    */
-  router.patch(`${ROUTE_API}/sign-up-finish/:uuid`, async (req: any, res) => {
+  private async createNewUser(res: Response, password: string, email: string) {
+    const hashedPassword = await this.generateHashedPassword(password);
+
+    const newUser = (await User.create({
+      uuid: uuidv4(),
+      email,
+      password: hashedPassword,
+      roles: ['teacher'],
+    }).catch(() => null)) as IUser;
+
+    if (!newUser) {
+      res.status(400).json({
+        errors: ['Помилка системи, спробуйте пізніше'],
+      });
+      return;
+    }
+
+    this.getRegistrationData(newUser, res);
+  }
+
+  /**
+   * @param  {string} password
+   */
+  private async generateHashedPassword(password: string): Promise<string> {
+    const salt = await bcrypt.genSalt(this.SALT);
+    return await bcrypt.hash(password, salt);
+  }
+
+  /**
+   * Finish sign up
+   *
+   * @param  {Request} req
+   * @param  {Response} res
+   */
+  private async signUpFinish(req: Request, res: Response) {
     const { uuid } = req.params || {};
 
     const { name, surname, thirdname, school } = req.body || {};
@@ -213,30 +179,95 @@ export const initAuthRoutes = () => {
         token,
       },
     });
-  });
-};
+  }
 
-function getRegistrationData(user: IUser, res: Response) {
-  const accessToken = jwt.sign(
-    {
-      uuid: user.uuid,
-      roles: user.roles,
-      email: user.email,
-      state: user.state,
-    },
-    process.env.ACCESS_TOKEN_HASH || 'publicAccess',
-    {
-      expiresIn: '30m',
+  /**
+   * @param  {string} email
+   */
+  private async getUserByEmail(email: string): Promise<IUser | null> {
+    return (await User.findOne({ email }).catch(() => null)) as IUser | null;
+  }
+
+  /**
+   * @param  {Response} res
+   * @param  {IUser} user
+   */
+  private async proceedSignIn(res: Response, user: IUser) {
+    if (user.state === 'pending') {
+      this.getRegistrationData(user, res);
+      return;
     }
-  );
 
-  res.status(201).json({
-    data: {
-      completeRegister: true,
-      user: {
-        uuid: user.uuid,
+    const token = await generateToken(user as IUser).catch(() => null);
+
+    if (token) {
+      res.status(200).json({
+        data: { user: getUserPublicProps(user as IUser), token },
+      });
+
+      return;
+    }
+
+    res.status(400).json({
+      errors: ['Помилка системи, спробуйте пізніше!'],
+    });
+    return;
+  }
+
+  /**
+   * @param  {string} password1
+   * @param  {string=''} password2
+   */
+  private async comparePasswords(
+    password1: string,
+    password2: string = ''
+  ): Promise<boolean> {
+    return await bcrypt.compare(password1, password2);
+  }
+
+  /**
+   * @param  {Response} res
+   * @param  {IUser} user
+   * @param  {string} password
+   */
+  private handleSignUpPending(
+    res: Response,
+    user: IUser,
+    password: string
+  ): boolean {
+    if (user.state !== 'pending') {
+      return false;
+    }
+
+    bcrypt.compare(
+      password,
+      user.password || '',
+      async (err: any, passwordsMatch: boolean) => {
+        if (passwordsMatch) {
+          this.getRegistrationData(user, res);
+          return true;
+        }
+      }
+    );
+
+    return false;
+  }
+
+  /**
+   * @param  {IUser} user
+   * @param  {Response} res
+   */
+  private getRegistrationData(user: IUser, res: Response) {
+    const accessToken = generateAccessToken(user);
+
+    res.status(201).json({
+      data: {
+        completeRegister: true,
+        user: {
+          uuid: user.uuid,
+        },
+        token: { accessToken },
       },
-      token: { accessToken },
-    },
-  });
+    });
+  }
 }

@@ -2,11 +2,27 @@ import { router } from '../router';
 import { getSchoolPublicProps, verifyAccessToken } from '../../utils';
 import { ISchool, School } from '../../models';
 import { v4 as uuidv4 } from 'uuid';
+import { Request, Response } from 'express';
 
-const ROUTE_API = '/school';
+export class SchoolRoutes {
+  private readonly ROUTE_API = '/school';
 
-export const initSchoolRoutes = () => {
-  router.get(`${ROUTE_API}`, async (req: any, res) => {
+  constructor() {
+    this.initRoutes();
+  }
+
+  private initRoutes() {
+    router.get(`${this.ROUTE_API}`, this.getSchools.bind(this));
+    router.post(`${this.ROUTE_API}`, this.createSchool.bind(this));
+  }
+
+  /**
+   * Get schools
+   *
+   * @param  {Request} req
+   * @param  {Response} res
+   */
+  private async getSchools(req: Request, res: Response) {
     const { query } = req.query || {};
 
     if (!verifyAccessToken(req.headers.authorization, res)) {
@@ -27,9 +43,15 @@ export const initSchoolRoutes = () => {
         getSchoolPublicProps(school)
       ),
     });
-  });
+  }
 
-  router.post(`${ROUTE_API}`, async (req: any, res) => {
+  /**
+   * Create school
+   *
+   * @param  {Request} req
+   * @param  {Response} res
+   */
+  private async createSchool(req: Request, res: Response) {
     const { name } = req.body || {};
     const parsedName = (name || '').trim();
 
@@ -58,5 +80,5 @@ export const initSchoolRoutes = () => {
     if (newSchool) {
       res.status(200).send({ data: getSchoolPublicProps(newSchool) });
     }
-  });
-};
+  }
+}
