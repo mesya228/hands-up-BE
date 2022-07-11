@@ -1,13 +1,18 @@
 import { Router } from 'express';
-import { AuthRoutes, ClassRoutes, SchoolRoutes, UserRoutes } from './routes';
-import { TokenRoutes } from './routes/token';
+import {
+  AuthRoutes,
+  ClassRoutes,
+  SchoolRoutes,
+  TokenRoutes,
+  UserRoutes,
+} from './routes';
 
 export const router: Router = Router();
 
 const routes = {
   authRoutes: { constructor: AuthRoutes },
-  userRoutes: { constructor: UserRoutes },
   tokenRoutes: { constructor: TokenRoutes },
+  userRoutes: { constructor: UserRoutes },
   classRoutes: { constructor: ClassRoutes },
   schoolRoutes: { constructor: SchoolRoutes },
 };

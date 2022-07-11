@@ -2,23 +2,34 @@ import { router } from '../router';
 import { getSchoolPublicProps, verifyAccessToken } from '../../utils';
 import { IClass, Class } from '../../models';
 import { v4 as uuidv4 } from 'uuid';
+import { Request, Response } from 'express';
 
-const ROUTE_API = '/class-marks';
+export class ClassRoutes {
+  private readonly ROUTE_API = '/class';
 
-export const initClassMarksRoutes = () => {
-  // GET all class marks
-  router.get(`${ROUTE_API}`, async (req: any, res) => {
-    const { teacherId } = req.params || {};
+  constructor() {
+    this.initRoutes();
+  }
 
-    if (!teacherId) {
-      return;
-    }
+  private initRoutes() {
+    router.get(`${this.ROUTE_API}/:id`, this.getClassMarks.bind(this));
+    router.post(`${this.ROUTE_API}`, this.createClass.bind(this));
+  }
+
+  /**
+   * Get marks by class id
+   *
+   * @param  {Request} req
+   * @param  {Response} res
+   */
+  private async getClassMarks(req: Request, res: Response) {
+    const { id } = req.params || {};
 
     if (!verifyAccessToken(req.headers.authorization, res)) {
       return;
     }
 
-    const classes = await Class.find({}).catch(() => null);
+    const classes = await Class.find({ id }).catch(() => null);
 
     if (!classes) {
       res.status(404).send({ errors: ['Клас не знайдено'] });
@@ -30,10 +41,15 @@ export const initClassMarksRoutes = () => {
         getSchoolPublicProps(classItem)
       ),
     });
-  });
+  }
 
-  // Create new class marks
-  router.post(`${ROUTE_API}`, async (req: any, res) => {
+  /**
+   * Add class mark
+   *
+   * @param  {Request} req
+   * @param  {Response} res
+   */
+  private async createClass(req: Request, res: Response) {
     const { name } = req.body || {};
     const parsedName = (name || '').trim();
 
@@ -62,5 +78,5 @@ export const initClassMarksRoutes = () => {
     if (newClass) {
       res.status(200).send({ data: getSchoolPublicProps(newClass) });
     }
-  });
-};
+  }
+}
