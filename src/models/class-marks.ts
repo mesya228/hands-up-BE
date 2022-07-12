@@ -9,16 +9,13 @@ const classMarksSchema = new Schema({
     type: String,
     require: true,
   },
-  school: {
-    type: String,
-    require: true,
-  },
   teachers: {
-    type: String,
+    type: Array<String>,
     require: true,
   },
   marks: {
     type: Array<IMark>,
+    default: [],
     require: true,
   },
 });
@@ -28,8 +25,7 @@ export const ClassMarks = model('ClassMarks', classMarksSchema);
 export interface IClassMarks {
   id: string;
   name: string;
-  school: string;
-  teachers: string;
+  teachers: string[];
   marks: IMark[];
 }
 

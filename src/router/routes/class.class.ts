@@ -1,5 +1,5 @@
 import { router } from '../router';
-import { getSchoolPublicProps, verifyAccessToken } from '../../utils';
+import { getClassPublicProps, getSchoolPublicProps, verifyAccessToken } from '../../utils';
 import { IClass, Class } from '../../models';
 import { v4 as uuidv4 } from 'uuid';
 import { Request, Response } from 'express';
@@ -36,7 +36,7 @@ export class ClassRoutes {
 
     res.status(200).send({
       data: (classes as IClass[]).map((classItem) =>
-        getSchoolPublicProps(classItem)
+        getClassPublicProps(classItem)
       ),
     });
   }

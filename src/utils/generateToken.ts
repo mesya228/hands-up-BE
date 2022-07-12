@@ -30,7 +30,7 @@ export const generateToken = async (user: IUser) => {
   }
 };
 
-export const generateAccessToken = async (payload: ITokenPayload | any) => {
+export const generateAccessToken = (payload: ITokenPayload | any): string => {
   const { uuid, email, roles, state } = payload;
 
   return jwt.sign(

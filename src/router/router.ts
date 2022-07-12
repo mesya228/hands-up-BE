@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import {
   AuthRoutes,
+  ClassMarksRoutes,
   ClassRoutes,
   SchoolRoutes,
   TokenRoutes,
@@ -14,6 +15,7 @@ const routes = {
   tokenRoutes: { constructor: TokenRoutes },
   userRoutes: { constructor: UserRoutes },
   classRoutes: { constructor: ClassRoutes },
+  classMarksRoutes: { constructor: ClassMarksRoutes },
   schoolRoutes: { constructor: SchoolRoutes },
 };
 

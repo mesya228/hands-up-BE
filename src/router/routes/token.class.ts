@@ -38,7 +38,7 @@ export class TokenRoutes {
     }
 
     const accessToken = generateAccessToken(token);
-
+    
     res.status(200).json({
       data: {
         accessToken,
