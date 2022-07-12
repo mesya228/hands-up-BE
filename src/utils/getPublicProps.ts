@@ -39,12 +39,12 @@ export const getClassPublicProps = ({
 
 export const getClassMarksProps = ({
   id,
-  name,
+  classId,
   marks,
   teachers,
 }: IClassMarks): IClassMarks => ({
   id,
-  name,
+  classId,
   marks,
   teachers,
 });

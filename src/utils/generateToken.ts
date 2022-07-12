@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import { ITokenPayload } from 'src/interfaces';
 import { IUser } from '../../src/models';
 import { UserToken } from '../models/token';
 
@@ -41,10 +42,3 @@ export const generateAccessToken = (payload: ITokenPayload | any): string => {
     }
   );
 };
-
-interface ITokenPayload {
-  uuid: string;
-  email: string;
-  roles: string[];
-  state: string;
-}

@@ -5,7 +5,7 @@ const classMarksSchema = new Schema({
     type: String,
     require: true,
   },
-  class: {
+  classId: {
     type: String,
     require: true,
   },
@@ -24,7 +24,7 @@ export const ClassMarks = model('ClassMarks', classMarksSchema);
 
 export interface IClassMarks {
   id: string;
-  name: string;
+  classId: string;
   teachers: string[];
   marks: IMark[];
 }

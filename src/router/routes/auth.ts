@@ -151,7 +151,11 @@ export class AuthRoutes {
       return;
     }
 
-    if (!verifyAccessToken(req.headers.authorization, res, true)) {
+    if (
+      !verifyAccessToken(req.headers.authorization, res, {
+        registrationState: true,
+      })
+    ) {
       return;
     }
 

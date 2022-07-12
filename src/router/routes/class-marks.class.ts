@@ -14,6 +14,7 @@ export class ClassMarksRoutes {
   private initRoutes() {
     router.get(`${this.ROUTE_API}/:id`, this.getClassMarks.bind(this));
     router.post(`${this.ROUTE_API}`, this.createClassMarks.bind(this));
+    router.patch(`${this.ROUTE_API}/:id`, this.addClassMark.bind(this));
   }
 
   /**
@@ -57,12 +58,13 @@ export class ClassMarksRoutes {
       return;
     }
 
-    if (!verifyAccessToken(req.headers.authorization, res)) {
+    if (!verifyAccessToken(req.headers.authorization, res, { compareId: id })) {
       return;
     }
 
     const foundClassMarks = await ClassMarks.findOne({
-      class: classId,
+      teachers: id,
+      classId,
     }).catch(() => null);
 
     if (foundClassMarks) {
@@ -72,9 +74,9 @@ export class ClassMarksRoutes {
 
     const newClassMarks = (await ClassMarks.create({
       id: uuidv4(),
+      classId,
       teachers: [id],
       marks: [],
-      class: classId,
     }).catch(() => null)) as IClassMarks | null;
 
     if (newClassMarks) {
@@ -83,5 +85,53 @@ export class ClassMarksRoutes {
     }
 
     res.status(400).send({ errors: ['Помилка системи, спробуйте пізніше!'] });
+  }
+
+  /**
+   * Add class mark
+   *
+   * @param {Request} req
+   * @param {Response} res
+   */
+  private async addClassMark(req: Request, res: Response) {
+    const { id } = req.params || {};
+    const { student, mark, date } = req.body || {};
+
+    if (!id || !student || !mark || !date) {
+      res.status(400).send({ errors: ['Не всі дані заповнено'] });
+      return;
+    }
+
+    const decodedToken = verifyAccessToken(req.headers.authorization, res);
+
+    if (!decodedToken) {
+      return;
+    }
+
+    const foundClassMarks = (await ClassMarks.findOne({ id }).catch(
+      () => null
+    )) as IClassMarks;
+
+    if (!foundClassMarks) {
+      res.status(400).send({ errors: ['Клас відсутній'] });
+      return;
+    }
+
+    if (!foundClassMarks.teachers.includes(decodedToken.uuid)) {
+      res.status(400).send({ errors: ['У доступі відмовлено тест'] });
+      return;
+    }
+
+    const parsedObject = getClassMarksProps(foundClassMarks);
+
+    await ClassMarks.updateOne(
+      { id },
+      {
+        ...parsedObject,
+        marks: [...parsedObject.marks, { student, mark, date }],
+      }
+    );
+
+    res.status(200).send({ data: ['Оцінку додано'] });
   }
 }
