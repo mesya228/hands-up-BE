@@ -8,7 +8,7 @@ export const verifyAccessToken = (
   accessToken: string | undefined,
   res: Response,
   config: IVerifyTokenConfig = {}
-): ITokenPayload | null => {
+): ITokenPayload | null | undefined => {
   if (!accessToken) {
     res.status(404).send({ errors: ['Токен відсутній'] });
     return null;
@@ -17,24 +17,27 @@ export const verifyAccessToken = (
   const decodedToken = jwt.decode(accessToken) as any;
 
   if (checkTokenAccess(res, config, decodedToken)) {
+    console.log('TEST 1');
     return null;
   }
 
-  const tokenResponse = jwt.verify(
-    accessToken,
-    process.env.ACCESS_TOKEN_HASH || ''
-  ) as JwtPayload;
+  try {
+    const tokenResponse = jwt.verify(
+      accessToken,
+      process.env.ACCESS_TOKEN_HASH || ''
+    ) as JwtPayload;
 
-  if (!tokenResponse) {
-    return decodedToken;
+    if (tokenResponse) {
+      return decodedToken;
+    }
+  } catch (e: any) {
+    console.log(e.name);
+    const handler = tokenErrorHandlers[e.name];
+
+    if (handler) {
+      res.status(handler.code).send({ errors: handler.errors });
+    }
   }
-
-  const handler = tokenErrorHandlers[tokenResponse.name];
-  if (handler) {
-    res.status(handler.code).send({ errors: handler.errors });
-  }
-
-  return null;
 };
 
 /**
