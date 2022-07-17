@@ -10,7 +10,6 @@ import {
   verifyAccessToken,
 } from '../../utils';
 import { Request, Response } from 'express';
-import { ITokenPayload } from 'src/interfaces';
 
 export class AuthRoutes {
   private readonly ROUTE_API = '/auth';
@@ -24,7 +23,7 @@ export class AuthRoutes {
     router.post(`${this.ROUTE_API}/sign-in`, this.signIn.bind(this));
     router.post(`${this.ROUTE_API}/sign-up-start`, this.signUpStart.bind(this));
     router.patch(
-      `${this.ROUTE_API}/sign-up-finish/:uuid`,
+      `${this.ROUTE_API}/sign-up-finish`,
       this.signUpFinish.bind(this)
     );
   }
@@ -177,8 +176,8 @@ export class AuthRoutes {
     const token = await generateToken(user as IUser).catch(() => null);
 
     res.status(200).send({
-      user: getUserPublicProps(user),
       data: {
+        user: getUserPublicProps(user),
         token,
       },
     });
