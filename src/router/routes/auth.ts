@@ -10,6 +10,7 @@ import {
   verifyAccessToken,
 } from '../../utils';
 import { Request, Response } from 'express';
+import { ITokenPayload } from 'src/interfaces';
 
 export class AuthRoutes {
   private readonly ROUTE_API = '/auth';
@@ -142,8 +143,6 @@ export class AuthRoutes {
    * @param  {Response} res
    */
   private async signUpFinish(req: Request, res: Response) {
-    const { uuid } = req.params || {};
-
     const { name, surname, thirdname, school } = req.body || {};
 
     if (!name || !surname || !thirdname || !school) {
@@ -151,16 +150,16 @@ export class AuthRoutes {
       return;
     }
 
-    if (
-      !verifyAccessToken(req.headers.authorization, res, {
-        registrationState: true,
-      })
-    ) {
+    const decodedToken = verifyAccessToken(req.headers.authorization, res, {
+      registrationState: true,
+    });
+
+    if (!decodedToken) {
       return;
     }
 
     const user = (await User.findOneAndUpdate(
-      { uuid },
+      { uuid: decodedToken.uuid },
       {
         name,
         surname,
