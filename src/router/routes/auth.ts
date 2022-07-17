@@ -259,7 +259,7 @@ export class AuthRoutes {
   private getRegistrationData(user: IUser, res: Response) {
     const accessToken = generateAccessToken(user);
 
-    res.status(201).json({
+    res.status(200).json({
       data: {
         completeRegister: true,
         user: {
