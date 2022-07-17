@@ -89,7 +89,7 @@ export class AuthRoutes {
     const user = await this.getUserByEmail(email);
 
     if (user) {
-      if (this.handleSignUpPending(res, user, password)) {
+      if (await this.handleSignUpPending(res, user, password)) {
         return;
       }
 
@@ -234,25 +234,20 @@ export class AuthRoutes {
    * @param  {IUser} user
    * @param  {string} password
    */
-  private handleSignUpPending(
+  private async handleSignUpPending(
     res: Response,
     user: IUser,
     password: string
-  ): boolean {
+  ): Promise<boolean> {
     if (user.state !== 'pending') {
       return false;
     }
 
-    bcrypt.compare(
-      password,
-      user.password || '',
-      async (err: any, passwordsMatch: boolean) => {
-        if (passwordsMatch) {
-          this.getRegistrationData(user, res);
-          return true;
-        }
-      }
-    );
+    const passwordsMatch = await this.comparePasswords(password, user.password);
+    if (passwordsMatch) {
+      this.getRegistrationData(user, res);
+      return true;
+    }
 
     return false;
   }

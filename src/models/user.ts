@@ -72,8 +72,8 @@ export interface IUser {
   username?: string;
 
   state?: 'registered' | 'pending';
-  school?: string;
-  classes?: string[];
+  school?: string | ISchool;
+  classes?: string[] | IClass[];
 }
 
 export interface ITeacher extends IUser {

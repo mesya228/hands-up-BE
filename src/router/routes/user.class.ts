@@ -16,6 +16,7 @@ export class UserRoutes {
 
   private initRoutes() {
     router.get(`${this.ROUTE_API}/:uuid`, this.getUserById.bind(this));
+    router.get(`${this.ROUTE_API}/:uuid/classes`, this.getUserById.bind(this));
   }
 
   /**
