@@ -1,8 +1,17 @@
-import { Class, IClass, ISchool, IUser, School, User } from '../../models';
+import {
+  ClassSchema,
+  IClass,
+  ISchool,
+  ISubject,
+  IUser,
+  School,
+  SubjectSchema,
+  User,
+} from '../../models';
 import { router } from '../router';
 import {
   getClassPublicProps,
-  getSchoolPublicProps,
+  getSimplePublicProps,
   getUserPublicProps,
   verifyAccessToken,
 } from '../../utils';
@@ -21,6 +30,10 @@ export class UserRoutes {
     router.get(
       `${this.ROUTE_API}/:uuid/classes`,
       this.getClassesByUser.bind(this)
+    );
+    router.get(
+      `${this.ROUTE_API}/:uuid/subjects`,
+      this.getSubjectsByUser.bind(this)
     );
   }
 
@@ -52,7 +65,7 @@ export class UserRoutes {
       )) as ISchool;
 
       if (school) {
-        user.school = getSchoolPublicProps(school);
+        user.school = getSimplePublicProps(school);
       }
     }
 
@@ -87,7 +100,7 @@ export class UserRoutes {
       )) as ISchool;
 
       if (school) {
-        user.school = getSchoolPublicProps(school);
+        user.school = getSimplePublicProps(school);
       }
     }
 
@@ -101,6 +114,43 @@ export class UserRoutes {
    * @param  {Response} res
    */
   private async getClassesByUser(req: Request, res: Response) {
+    const { uuid, subject } = req.query || {};
+
+    if (!verifyAccessToken(req.headers.authorization, res)) {
+      return;
+    }
+
+    const user = (await User.findOne({ uuid }).catch(() => null)) as IUser;
+
+    if (!user) {
+      res.status(404).send({ errors: ['Користовача не знайдено'] });
+    }
+
+    const subjects = (await SubjectSchema.find({ id: subject }).catch(
+      () => null
+    )) as ISubject[];
+
+    const classes = (await ClassSchema.find({
+      students: uuid,
+    }).catch(() => null)) as IClass[];
+
+    if (!classes.length) {
+      res.status(404).send({ errors: ['Класи не знайдено'] });
+      return;
+    }
+
+    res.status(200).send({
+      data: classes.map((classItem) => getClassPublicProps(classItem)),
+    });
+  }
+
+  /**
+   * Find subjects by user id
+   *
+   * @param  {Request} req
+   * @param  {Response} res
+   */
+  private async getSubjectsByUser(req: Request, res: Response) {
     const uuid = req.params.uuid;
 
     if (!verifyAccessToken(req.headers.authorization, res)) {
@@ -113,17 +163,19 @@ export class UserRoutes {
       res.status(404).send({ errors: ['Користовача не знайдено'] });
     }
 
-    const classes = (await Class.find({
-      students: uuid,
-    }).catch(() => null)) as IClass[];
+    const subjects = (await SubjectSchema.find({
+      id: {
+        $in: user.subjects,
+      },
+    }).catch(() => null)) as ISubject[];
 
-    if (!classes.length) {
-      res.status(404).send({ errors: ['Класи не знайдено'] });
+    if (!subjects.length) {
+      res.status(404).send({ errors: ['Предмети не знайдено'] });
       return;
     }
 
     res.status(200).send({
-      data: classes.map((classItem) => getClassPublicProps(classItem)),
+      data: subjects.map((subject) => getSimplePublicProps(subject)),
     });
   }
 }

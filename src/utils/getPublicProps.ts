@@ -1,4 +1,4 @@
-import { IClass, IClassMarks, ISchool, IUser } from '../models';
+import { IClass, IClassMarks, IUser } from '../models';
 
 export const getUserPublicProps = ({
   uuid,
@@ -20,31 +20,22 @@ export const getUserPublicProps = ({
   username,
 });
 
-export const getSchoolPublicProps = ({ id, name }: ISchool): ISchool => ({
+export const getSimplePublicProps = ({ id, name }: any) => ({
   id,
   name,
 });
 
-export const getClassPublicProps = ({
-  id,
-  name,
-  school,
-  students,
-}: IClass): IClass => ({
+export const getClassPublicProps = ({ id, name, school, students }: IClass): IClass => ({
   id,
   name,
   school,
   students,
 });
 
-export const getClassMarksProps = ({
+export const getClassMarksProps = ({ id, classId, subjectId, marks, teachers }: IClassMarks): IClassMarks => ({
   id,
   classId,
-  marks,
-  teachers,
-}: IClassMarks): IClassMarks => ({
-  id,
-  classId,
+  subjectId,
   marks,
   teachers,
 });

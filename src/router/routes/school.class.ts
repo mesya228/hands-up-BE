@@ -1,5 +1,5 @@
 import { router } from '../router';
-import { getSchoolPublicProps, verifyAccessToken } from '../../utils';
+import { getSimplePublicProps, verifyAccessToken } from '../../utils';
 import { ISchool, School } from '../../models';
 import { v4 as uuidv4 } from 'uuid';
 import { Request, Response } from 'express';
@@ -40,7 +40,7 @@ export class SchoolRoutes {
 
     res.status(200).send({
       data: (schools as ISchool[]).map((school) =>
-        getSchoolPublicProps(school)
+        getSimplePublicProps(school)
       ),
     });
   }
@@ -78,7 +78,7 @@ export class SchoolRoutes {
     });
 
     if (newSchool) {
-      res.status(200).send({ data: getSchoolPublicProps(newSchool) });
+      res.status(200).send({ data: getSimplePublicProps(newSchool) });
     }
   }
 }

@@ -1,6 +1,7 @@
 import { Schema, model } from 'mongoose';
 import { IClass } from './class';
 import { ISchool } from './school';
+import { ISubject } from './subject';
 
 const userSchema = new Schema({
   uuid: {
@@ -19,7 +20,7 @@ const userSchema = new Schema({
   },
   state: {
     type: String,
-    enum: ['registered', 'pending'],
+    enum: ['started', 'pending', 'registered'],
     default: 'pending',
     require: false,
   },
@@ -55,6 +56,10 @@ const userSchema = new Schema({
     require: true,
     type: Array<String>,
   },
+  subjects: {
+    require: true,
+    type: Array<String>,
+  },
 });
 
 export const User = model('User', userSchema);
@@ -74,6 +79,7 @@ export interface IUser {
   state?: 'registered' | 'pending';
   school?: string | ISchool;
   classes?: string[] | IClass[];
+  subjects?: string[] | ISubject[];
 }
 
 export interface ITeacher extends IUser {

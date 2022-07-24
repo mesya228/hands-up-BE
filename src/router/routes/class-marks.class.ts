@@ -51,9 +51,9 @@ export class ClassMarksRoutes {
    * @param {Response} res
    */
   private async createClassMarks(req: Request, res: Response) {
-    const { id, classId } = req.body || {};
+    const { id, classId, subjectId } = req.body || {};
 
-    if (!id || !classId) {
+    if (!id || !classId || !subjectId) {
       res.status(400).send({ errors: ['Не всі дані заповнено'] });
       return;
     }
@@ -75,6 +75,7 @@ export class ClassMarksRoutes {
     const newClassMarks = (await ClassMarks.create({
       id: uuidv4(),
       classId,
+      subjectId,
       teachers: [id],
       marks: [],
     }).catch(() => null)) as IClassMarks | null;

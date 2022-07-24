@@ -19,7 +19,7 @@ const classSchema = new Schema({
   },
 });
 
-export const Class = model('Class', classSchema);
+export const ClassSchema = model('Class', classSchema);
 
 export interface IClass {
   id: string;
