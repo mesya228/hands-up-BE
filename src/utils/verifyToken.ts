@@ -17,7 +17,6 @@ export const verifyAccessToken = (
   const decodedToken = jwt.decode(accessToken) as any;
 
   if (checkTokenAccess(res, config, decodedToken)) {
-    console.log('TEST 1');
     return null;
   }
 
@@ -31,7 +30,6 @@ export const verifyAccessToken = (
       return decodedToken;
     }
   } catch (e: any) {
-    console.log(e.name);
     const handler = tokenErrorHandlers[e.name];
 
     if (handler) {

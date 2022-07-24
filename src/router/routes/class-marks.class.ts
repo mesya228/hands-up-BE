@@ -12,7 +12,7 @@ export class ClassMarksRoutes {
   }
 
   private initRoutes() {
-    router.get(`${this.ROUTE_API}/:id`, this.getClassMarks.bind(this));
+    router.get(`${this.ROUTE_API}`, this.getClassMarks.bind(this));
     router.post(`${this.ROUTE_API}`, this.createClassMarks.bind(this));
     router.patch(`${this.ROUTE_API}/:id`, this.addClassMark.bind(this));
   }
@@ -24,23 +24,28 @@ export class ClassMarksRoutes {
    * @param {Response} res
    */
   private async getClassMarks(req: Request, res: Response) {
-    const { id } = req.params || {};
+    const { subjectId, classId } = req.query || {};
+
+    if (!subjectId && !classId) {
+      res.status(400).send({ errors: ['Не всі дані заповнено'] });
+      return;
+    }
 
     if (!verifyAccessToken(req.headers.authorization, res)) {
       return;
     }
 
-    const classMarks = (await ClassMarks.find({ id }).catch(
-      () => null
-    )) as IClassMarks | null;
+    const classMarks = (await ClassMarks.find({ $or: [{ subjectId }, { classId }] }).catch(
+      () => null,
+    )) as IClassMarks[];
 
-    if (!classMarks) {
+    if (!classMarks.length) {
       res.status(404).send({ errors: ['Клас не знайдено'] });
       return;
     }
 
     res.status(200).send({
-      data: getClassMarksProps(classMarks),
+      data: getClassMarksProps(classMarks[0]),
     });
   }
 
@@ -109,9 +114,7 @@ export class ClassMarksRoutes {
       return;
     }
 
-    const foundClassMarks = (await ClassMarks.findOne({ id }).catch(
-      () => null
-    )) as IClassMarks;
+    const foundClassMarks = (await ClassMarks.findOne({ id }).catch(() => null)) as IClassMarks;
 
     if (!foundClassMarks) {
       res.status(400).send({ errors: ['Клас відсутній'] });
@@ -130,7 +133,7 @@ export class ClassMarksRoutes {
       {
         ...parsedObject,
         marks: [...parsedObject.marks, { student, mark, date }],
-      }
+      },
     );
 
     res.status(200).send({ data: ['Оцінку додано'] });

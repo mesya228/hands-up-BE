@@ -1,6 +1,8 @@
 import {
+  ClassMarks,
   ClassSchema,
   IClass,
+  IClassMarks,
   ISchool,
   ISubject,
   IUser,
@@ -9,12 +11,7 @@ import {
   User,
 } from '../../models';
 import { router } from '../router';
-import {
-  getClassPublicProps,
-  getSimplePublicProps,
-  getUserPublicProps,
-  verifyAccessToken,
-} from '../../utils';
+import { getClassPublicProps, getSimplePublicProps, getUserPublicProps, verifyAccessToken } from '../../utils';
 import { Request, Response } from 'express';
 
 export class UserRoutes {
@@ -27,14 +24,8 @@ export class UserRoutes {
   private initRoutes() {
     router.get(`${this.ROUTE_API}`, this.getUser.bind(this));
     router.get(`${this.ROUTE_API}/:uuid`, this.getUserById.bind(this));
-    router.get(
-      `${this.ROUTE_API}/:uuid/classes`,
-      this.getClassesByUser.bind(this)
-    );
-    router.get(
-      `${this.ROUTE_API}/:uuid/subjects`,
-      this.getSubjectsByUser.bind(this)
-    );
+    router.get(`${this.ROUTE_API}/:uuid/classes`, this.getClassesByUser.bind(this));
+    router.get(`${this.ROUTE_API}/:uuid/subjects`, this.getSubjectsByUser.bind(this));
   }
 
   /**
@@ -60,9 +51,7 @@ export class UserRoutes {
     }
 
     if (user.school) {
-      const school = (await School.findOne({ id: user.school }).catch(
-        () => null
-      )) as ISchool;
+      const school = (await School.findOne({ id: user.school }).catch(() => null)) as ISchool;
 
       if (school) {
         user.school = getSimplePublicProps(school);
@@ -95,9 +84,7 @@ export class UserRoutes {
     }
 
     if (user.school) {
-      const school = (await School.findOne({ id: user.school }).catch(
-        () => null
-      )) as ISchool;
+      const school = (await School.findOne({ id: user.school }).catch(() => null)) as ISchool;
 
       if (school) {
         user.school = getSimplePublicProps(school);
@@ -114,24 +101,23 @@ export class UserRoutes {
    * @param  {Response} res
    */
   private async getClassesByUser(req: Request, res: Response) {
-    const { uuid, subject } = req.query || {};
+    const { uuid } = req.params || {};
+    const { subjectId } = req.query || {};
+
+    if (!subjectId) {
+      res.status(400).send({ errors: ['Не всі дані заповнено'] });
+    }
 
     if (!verifyAccessToken(req.headers.authorization, res)) {
       return;
     }
 
-    const user = (await User.findOne({ uuid }).catch(() => null)) as IUser;
+    const classMarks = (await ClassMarks.find({ subjectId, teachers: uuid }).catch(() => [])) as IClassMarks[];
 
-    if (!user) {
-      res.status(404).send({ errors: ['Користовача не знайдено'] });
-    }
-
-    const subjects = (await SubjectSchema.find({ id: subject }).catch(
-      () => null
-    )) as ISubject[];
+    const classesId = classMarks.map((c) => c.classId);
 
     const classes = (await ClassSchema.find({
-      students: uuid,
+      id: classesId,
     }).catch(() => null)) as IClass[];
 
     if (!classes.length) {

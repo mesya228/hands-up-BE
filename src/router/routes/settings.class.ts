@@ -1,11 +1,7 @@
 import { IUser, User } from '../../models';
 import { router } from '../router';
 
-import {
-  generateToken,
-  getUserPublicProps,
-  verifyAccessToken,
-} from '../../utils';
+import { generateToken, getUserPublicProps, verifyAccessToken } from '../../utils';
 import { Request, Response } from 'express';
 
 export class SettingsRoutes {
@@ -17,17 +13,17 @@ export class SettingsRoutes {
 
   private initRoutes() {
     router.patch(`${this.ROUTE_API}/:uuid`, this.updateUser.bind(this));
+    router.patch(`${this.ROUTE_API}/:uuid/subject`, this.addUserSubject.bind(this));
   }
 
   /**
-   * Finish sign up
+   * Update user info settings
    *
    * @param  {Request} req
    * @param  {Response} res
    */
   private async updateUser(req: Request, res: Response) {
     const { uuid } = req.params || {};
-    console.log(uuid);
 
     const { name, surname, thirdname, school, phone } = req.body || {};
 
@@ -36,13 +32,9 @@ export class SettingsRoutes {
       return;
     }
 
-    if (
-      !verifyAccessToken(req.headers.authorization, res)
-    ) {
-      console.log('VERIFY ACCESS');
+    if (!verifyAccessToken(req.headers.authorization, res)) {
       return;
     }
-
 
     const user = (await User.findOneAndUpdate(
       { uuid },
@@ -52,10 +44,48 @@ export class SettingsRoutes {
         thirdname,
         school,
         phone,
-      }
+      },
     ).catch(() => null)) as IUser;
 
-    console.log(user);
+    if (!user) {
+      res.status(404).send({ errors: ['Помилка системи'] });
+      return;
+    }
+
+    res.status(200).send({
+      user: getUserPublicProps(user),
+    });
+  }
+
+  /**
+   * Add Subject to user
+   *
+   * @param  {Request} req
+   * @param  {Response} res
+   */
+  private async addUserSubject(req: Request, res: Response) {
+    const { uuid } = req.params || {};
+
+    const { subjectId } = req.body || {};
+
+    if (!subjectId) {
+      res.status(400).send({ errors: ['Не всі дані заповнено'] });
+      return;
+    }
+
+    if (!verifyAccessToken(req.headers.authorization, res)) {
+      return;
+    }
+
+    const user = (await User.findOneAndUpdate(
+      { uuid },
+      {
+        $push: {
+          subjects: subjectId,
+        },
+      },
+    ).catch(() => null)) as IUser;
+
     if (!user) {
       res.status(404).send({ errors: ['Помилка системи'] });
       return;

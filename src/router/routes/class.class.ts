@@ -54,7 +54,7 @@ export class ClassRoutes {
    * @param  {Response} res
    */
   private async createClass(req: Request, res: Response) {
-    const { name } = req.body || {};
+    const { name, schoolId, students } = req.body || {};
     const parsedName = (name || '').trim();
 
     if (!name) {
@@ -66,7 +66,7 @@ export class ClassRoutes {
       return;
     }
 
-    const foundClass = await ClassSchema.findOne({ name: parsedName }).catch(() => {
+    const foundClass = await ClassSchema.findOne({ name: parsedName, schoolId }).catch(() => {
       res.status(404).send({ errors: ['Помилка системи, спробуйте пізніше!'] });
     });
 
@@ -75,7 +75,7 @@ export class ClassRoutes {
       return;
     }
 
-    const newClass = await ClassSchema.create({ id: uuidv4(), name }).catch(() => {
+    const newClass = await ClassSchema.create({ id: uuidv4(), name, schoolId, students }).catch(() => {
       res.status(400).send({ errors: ['Помилка системи, спробуйте пізніше!'] });
     });
 
@@ -100,8 +100,6 @@ export class ClassRoutes {
     const school = (await School.findOne({ classes: classId }).catch(
       () => null
     )) as ISchool;
-
-    console.log(school);
 
     const users = (await User.find({
       classes: classId,
