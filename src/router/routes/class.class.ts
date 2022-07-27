@@ -3,6 +3,7 @@ import {
   getClassPublicProps,
   getSimplePublicProps,
   getUserPublicProps,
+  toType,
   verifyAccessToken,
 } from '../../utils';
 import { IClass, ClassSchema, School, User, ISchool, IUser } from '../../models';
@@ -33,7 +34,7 @@ export class ClassRoutes {
       return;
     }
 
-    const classes = await ClassSchema.find({}).catch(() => null);
+    const classes = toType<IClass[]>(await ClassSchema.find({}).catch(() => null));
 
     if (!classes) {
       res.status(404).send({ errors: ['Клас не знайдено'] });
@@ -97,16 +98,17 @@ export class ClassRoutes {
       return;
     }
 
-    const school = (await School.findOne({ classes: classId }).catch(
+    const school = toType<ISchool>(await School.findOne({ classes: classId }).catch(
       () => null
-    )) as ISchool;
+    ));
 
-    const users = (await User.find({
+
+    const users = toType<IUser[]>(await User.find({
       classes: classId,
-      school: school.id,
-    }).catch(() => null)) as IUser[];
+      school: school?.id,
+    }).catch(() => null));
 
-    if (!users.length) {
+    if (!users?.length) {
       res.status(404).send({ errors: ['Користовачів не знайдено'] });
       return;
     }

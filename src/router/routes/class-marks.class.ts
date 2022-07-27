@@ -1,5 +1,5 @@
 import { router } from '../router';
-import { getClassMarksProps, verifyAccessToken } from '../../utils';
+import { getClassMarksProps, toType, verifyAccessToken } from '../../utils';
 import { IClassMarks, ClassMarks } from '../../models';
 import { v4 as uuidv4 } from 'uuid';
 import { Request, Response } from 'express';
@@ -35,11 +35,11 @@ export class ClassMarksRoutes {
       return;
     }
 
-    const classMarks = (await ClassMarks.find({ $or: [{ subjectId }, { classId }] }).catch(
+    const classMarks = toType<IClassMarks[]>(await ClassMarks.find({ $or: [{ subjectId }, { classId }] }).catch(
       () => null,
-    )) as IClassMarks[];
+    ));
 
-    if (!classMarks.length) {
+    if (!classMarks?.length) {
       res.status(404).send({ errors: ['Клас не знайдено'] });
       return;
     }
@@ -77,13 +77,13 @@ export class ClassMarksRoutes {
       return;
     }
 
-    const newClassMarks = (await ClassMarks.create({
+    const newClassMarks = toType<IClassMarks>(await ClassMarks.create({
       id: uuidv4(),
       classId,
       subjectId,
       teachers: [id],
       marks: [],
-    }).catch(() => null)) as IClassMarks | null;
+    }).catch(() => null));
 
     if (newClassMarks) {
       res.status(200).send({ data: getClassMarksProps(newClassMarks) });
@@ -114,7 +114,7 @@ export class ClassMarksRoutes {
       return;
     }
 
-    const foundClassMarks = (await ClassMarks.findOne({ id }).catch(() => null)) as IClassMarks;
+    const foundClassMarks = toType<IClassMarks>(await ClassMarks.findOne({ id }).catch(() => null));
 
     if (!foundClassMarks) {
       res.status(400).send({ errors: ['Клас відсутній'] });

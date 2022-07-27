@@ -7,6 +7,7 @@ import {
   generateAccessToken,
   generateToken,
   getUserPublicProps,
+  toType,
   verifyAccessToken,
 } from '../../utils';
 import { Request, Response } from 'express';
@@ -110,12 +111,12 @@ export class AuthRoutes {
   private async createNewUser(res: Response, password: string, email: string) {
     const hashedPassword = await this.generateHashedPassword(password);
 
-    const newUser = (await User.create({
+    const newUser = toType<IUser>((await User.create({
       uuid: uuidv4(),
       email,
       password: hashedPassword,
       roles: ['teacher'],
-    }).catch(() => null)) as IUser;
+    }).catch(() => null)));
 
     if (!newUser) {
       res.status(400).json({
@@ -157,7 +158,7 @@ export class AuthRoutes {
       return;
     }
 
-    const user = (await User.findOneAndUpdate(
+    const user = toType<IUser>(await User.findOneAndUpdate(
       { uuid: decodedToken.uuid },
       {
         name,
@@ -166,7 +167,7 @@ export class AuthRoutes {
         school,
         state: 'registered',
       }
-    ).catch(() => null)) as IUser;
+    ).catch(() => null));
 
     if (!user) {
       res.status(404).send({ errors: ['Користувача не знайдено'] });
@@ -187,7 +188,7 @@ export class AuthRoutes {
    * @param  {string} email
    */
   private async getUserByEmail(email: string): Promise<IUser | null> {
-    return (await User.findOne({ email }).catch(() => null)) as IUser | null;
+    return toType<IUser>(await User.findOne({ email }).catch(() => null));
   }
 
   /**

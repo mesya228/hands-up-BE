@@ -11,7 +11,7 @@ import {
   User,
 } from '../../models';
 import { router } from '../router';
-import { getClassPublicProps, getSimplePublicProps, getUserPublicProps, verifyAccessToken } from '../../utils';
+import { getClassPublicProps, getSimplePublicProps, getUserPublicProps, toType, verifyAccessToken } from '../../utils';
 import { Request, Response } from 'express';
 
 export class UserRoutes {
@@ -51,7 +51,7 @@ export class UserRoutes {
     }
 
     if (user.school) {
-      const school = (await School.findOne({ id: user.school }).catch(() => null)) as ISchool;
+      const school = toType<ISchool>(await School.findOne({ id: user.school }).catch(() => null));
 
       if (school) {
         user.school = getSimplePublicProps(school);
@@ -84,7 +84,7 @@ export class UserRoutes {
     }
 
     if (user.school) {
-      const school = (await School.findOne({ id: user.school }).catch(() => null)) as ISchool;
+      const school = toType<ISchool>(await School.findOne({ id: user.school }).catch(() => null));
 
       if (school) {
         user.school = getSimplePublicProps(school);
@@ -112,15 +112,17 @@ export class UserRoutes {
       return;
     }
 
-    const classMarks = (await ClassMarks.find({ subjectId, teachers: uuid }).catch(() => [])) as IClassMarks[];
+    const classMarks = toType<IClassMarks[]>(await ClassMarks.find({ subjectId, teachers: uuid }).catch(() => []));
 
-    const classesId = classMarks.map((c) => c.classId);
+    const classesId = classMarks?.map((c) => c.classId);
 
-    const classes = (await ClassSchema.find({
-      id: classesId,
-    }).catch(() => null)) as IClass[];
+    const classes = toType<IClass[]>(
+      await ClassSchema.find({
+        id: classesId,
+      }).catch(() => null),
+    );
 
-    if (!classes.length) {
+    if (!classes?.length) {
       res.status(404).send({ errors: ['Класи не знайдено'] });
       return;
     }

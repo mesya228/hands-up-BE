@@ -1,7 +1,7 @@
 import { IUser, User } from '../../models';
 import { router } from '../router';
 
-import { getUserPublicProps, verifyAccessToken } from '../../utils';
+import { getUserPublicProps, toType, verifyAccessToken } from '../../utils';
 import { Request, Response } from 'express';
 
 export class SettingsRoutes {
@@ -37,7 +37,7 @@ export class SettingsRoutes {
       return;
     }
 
-    const user = (await User.findOneAndUpdate(
+    const user = toType<IUser>(await User.findOneAndUpdate(
       { uuid },
       {
         name,
@@ -46,7 +46,7 @@ export class SettingsRoutes {
         school,
         phone,
       },
-    ).catch(() => null)) as IUser;
+    ).catch(() => null));
 
     if (!user) {
       res.status(404).send({ errors: ['Помилка системи'] });
@@ -100,14 +100,14 @@ export class SettingsRoutes {
       return;
     }
 
-    const user = (await User.findOneAndUpdate(
+    const user = toType<IUser>(await User.findOneAndUpdate(
       { uuid },
       {
         $push: {
           subjects: subjectId,
         },
       },
-    ).catch(() => null)) as IUser;
+    ).catch(() => null));
 
     if (!user) {
       res.status(404).send({ errors: ['Помилка системи'] });
