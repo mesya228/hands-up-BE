@@ -38,7 +38,7 @@ export class SubjectRoutes {
     const foundSubjects = toType<ISubject[]>(
       await SubjectSchema.find({
         name: { $regex: parsedQuery, $options: 'i' },
-      }).catch(() => null),
+      }).catch(() => []),
     );
 
     if (!foundSubjects?.length) {
@@ -70,18 +70,19 @@ export class SubjectRoutes {
 
     const foundSubject = await SubjectSchema.findOne({
       name: parsedName,
-    }).catch(() => {
-      res.status(404).send({ errors: ['Помилка системи, спробуйте пізніше!'] });
-    });
+    }).catch(() => null);
 
     if (foundSubject) {
       res.status(400).send({ errors: ['Предмет з такою назвою вже існує'] });
       return;
     }
 
-    const newSubject = await SubjectSchema.create({ id: uuidv4(), name }).catch(() => {
+    const newSubject = await SubjectSchema.create({ id: uuidv4(), name }).catch(() => null);
+
+    if (!newSubject) {
       res.status(400).send({ errors: ['Помилка системи, спробуйте пізніше!'] });
-    });
+      return;
+    }
 
     if (newSubject) {
       res.status(200).send({ data: getSimplePublicProps(newSubject) });

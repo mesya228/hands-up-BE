@@ -1,11 +1,5 @@
 import { router } from '../router';
-import {
-  getClassPublicProps,
-  getSimplePublicProps,
-  getUserPublicProps,
-  toType,
-  verifyAccessToken,
-} from '../../utils';
+import { getClassPublicProps, getSimplePublicProps, getUserPublicProps, toType, verifyAccessToken } from '../../utils';
 import { IClass, ClassSchema, School, User, ISchool, IUser } from '../../models';
 import { v4 as uuidv4 } from 'uuid';
 import { Request, Response } from 'express';
@@ -34,7 +28,7 @@ export class ClassRoutes {
       return;
     }
 
-    const classes = toType<IClass[]>(await ClassSchema.find({}).catch(() => null));
+    const classes = toType<IClass[]>(await ClassSchema.find({}).catch(() => []));
 
     if (!classes) {
       res.status(404).send({ errors: ['Клас не знайдено'] });
@@ -42,9 +36,7 @@ export class ClassRoutes {
     }
 
     res.status(200).send({
-      data: classes.map((classItem) =>
-        getClassPublicProps(classItem)
-      ),
+      data: classes.map((classItem) => getClassPublicProps(classItem)),
     });
   }
 
@@ -67,18 +59,19 @@ export class ClassRoutes {
       return;
     }
 
-    const foundClass = await ClassSchema.findOne({ name: parsedName, schoolId }).catch(() => {
-      res.status(404).send({ errors: ['Помилка системи, спробуйте пізніше!'] });
-    });
+    const foundClass = await ClassSchema.findOne({ name: parsedName, schoolId }).catch(() => null);
 
     if (foundClass) {
       res.status(400).send({ errors: ['Клас з такою назвою вже існує'] });
       return;
     }
 
-    const newClass = await ClassSchema.create({ id: uuidv4(), name, schoolId, students }).catch(() => {
+    const newClass = await ClassSchema.create({ id: uuidv4(), name, schoolId, students }).catch(() => null);
+
+    if (!newClass) {
       res.status(400).send({ errors: ['Помилка системи, спробуйте пізніше!'] });
-    });
+      return;
+    }
 
     if (newClass) {
       res.status(200).send({ data: getSimplePublicProps(newClass) });
@@ -98,15 +91,14 @@ export class ClassRoutes {
       return;
     }
 
-    const school = toType<ISchool>(await School.findOne({ classes: classId }).catch(
-      () => null
-    ));
+    const school = toType<ISchool>(await School.findOne({ classes: classId }).catch(() => null));
 
-
-    const users = toType<IUser[]>(await User.find({
-      classes: classId,
-      school: school?.id,
-    }).catch(() => null));
+    const users = toType<IUser[]>(
+      await User.find({
+        classes: classId,
+        school: school?.id,
+      }).catch(() => []),
+    );
 
     if (!users?.length) {
       res.status(404).send({ errors: ['Користовачів не знайдено'] });

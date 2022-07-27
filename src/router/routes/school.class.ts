@@ -32,7 +32,7 @@ export class SchoolRoutes {
     const schools = toType<ISchool[]>(
       await School.find({
         name: { $regex: query, $options: 'i' },
-      }).catch(() => null),
+      }).catch(() => []),
     );
 
     if (!schools?.length) {
@@ -64,21 +64,20 @@ export class SchoolRoutes {
       return;
     }
 
-    const school = await School.findOne({ name: parsedName }).catch(() => {
-      res.status(404).send({ errors: ['Помилка системи, спробуйте пізніше!'] });
-    });
+    const school = await School.findOne({ name: parsedName }).catch(() => null);
 
     if (school) {
       res.status(400).send({ errors: ['Школа з такою назвою вже існує'] });
       return;
     }
 
-    const newSchool = await School.create({ id: uuidv4(), name }).catch(() => {
-      res.status(400).send({ errors: ['Помилка системи, спробуйте пізніше!'] });
-    });
+    const newSchool = await School.create({ id: uuidv4(), name }).catch(() => null);
 
-    if (newSchool) {
-      res.status(200).send({ data: getSimplePublicProps(newSchool) });
+    if (!newSchool) {
+      res.status(400).send({ errors: ['Помилка системи, спробуйте пізніше!'] });
+      return;
     }
+
+    res.status(200).send({ data: getSimplePublicProps(newSchool) });
   }
 }

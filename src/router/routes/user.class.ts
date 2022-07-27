@@ -82,9 +82,9 @@ export class UserRoutes {
       await User.find({
         roles: 'student',
         $or: [
-          { name: { $regex: parsedQuery, $options: "i" } },
-          { surname: { $regex: parsedQuery, $options: "i" } },
-          { thirdname: { $regex: parsedQuery, $options: "i" } },
+          { name: { $regex: parsedQuery, $options: 'i' } },
+          { surname: { $regex: parsedQuery, $options: 'i' } },
+          { thirdname: { $regex: parsedQuery, $options: 'i' } },
         ],
       }).catch(() => {
         res.status(404).send({ errors: ['Користувачів не знайдено'] });
@@ -114,9 +114,7 @@ export class UserRoutes {
     }
 
     const user = toType<IUser>(
-      await User.findOne({ uuid }).catch(() => {
-        res.status(404).send({ errors: ['Користувача не знайдено'] });
-      }),
+      await User.findOne({ uuid }).catch(() => null),
     );
 
     if (!user) {
@@ -147,6 +145,7 @@ export class UserRoutes {
 
     if (!subjectId) {
       res.status(400).send({ errors: ['Не всі дані заповнено'] });
+      return;
     }
 
     if (!verifyAccessToken(req.headers.authorization, res)) {
@@ -160,7 +159,7 @@ export class UserRoutes {
     const classes = toType<IClass[]>(
       await ClassSchema.find({
         id: classesId,
-      }).catch(() => null),
+      }).catch(() => []),
     );
 
     if (!classes?.length) {
@@ -197,7 +196,7 @@ export class UserRoutes {
         id: {
           $in: user?.subjects,
         },
-      }).catch(() => null),
+      }).catch(() => []),
     );
 
     if (!subjects?.length) {

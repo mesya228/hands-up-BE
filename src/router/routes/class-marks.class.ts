@@ -36,7 +36,7 @@ export class ClassMarksRoutes {
     }
 
     const classMarks = toType<IClassMarks[]>(await ClassMarks.find({ $or: [{ subjectId }, { classId }] }).catch(
-      () => null,
+      () => [],
     ));
 
     if (!classMarks?.length) {
