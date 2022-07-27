@@ -42,7 +42,7 @@ export class ClassRoutes {
     }
 
     res.status(200).send({
-      data: (classes as IClass[]).map((classItem) =>
+      data: classes.map((classItem) =>
         getClassPublicProps(classItem)
       ),
     });

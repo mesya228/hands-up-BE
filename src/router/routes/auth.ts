@@ -3,13 +3,7 @@ import { router } from '../router';
 
 import bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
-import {
-  generateAccessToken,
-  generateToken,
-  getUserPublicProps,
-  toType,
-  verifyAccessToken,
-} from '../../utils';
+import { generateAccessToken, generateToken, getUserPublicProps, toType, verifyAccessToken } from '../../utils';
 import { Request, Response } from 'express';
 
 export class AuthRoutes {
@@ -23,10 +17,7 @@ export class AuthRoutes {
   private initRoutes() {
     router.post(`${this.ROUTE_API}/sign-in`, this.signIn.bind(this));
     router.post(`${this.ROUTE_API}/sign-up-start`, this.signUpStart.bind(this));
-    router.patch(
-      `${this.ROUTE_API}/sign-up-finish`,
-      this.signUpFinish.bind(this)
-    );
+    router.patch(`${this.ROUTE_API}/sign-up-finish`, this.signUpFinish.bind(this));
   }
 
   /**
@@ -49,10 +40,7 @@ export class AuthRoutes {
     const user = await this.getUserByEmail(email);
 
     if (user) {
-      const isPasswordsMatch = await this.comparePasswords(
-        password,
-        user.password
-      );
+      const isPasswordsMatch = await this.comparePasswords(password, user.password);
 
       if (isPasswordsMatch) {
         await this.proceedSignIn(res, user);
@@ -111,12 +99,14 @@ export class AuthRoutes {
   private async createNewUser(res: Response, password: string, email: string) {
     const hashedPassword = await this.generateHashedPassword(password);
 
-    const newUser = toType<IUser>((await User.create({
-      uuid: uuidv4(),
-      email,
-      password: hashedPassword,
-      roles: ['teacher'],
-    }).catch(() => null)));
+    const newUser = toType<IUser>(
+      await User.create({
+        uuid: uuidv4(),
+        email,
+        password: hashedPassword,
+        roles: ['teacher'],
+      }).catch(() => null),
+    );
 
     if (!newUser) {
       res.status(400).json({
@@ -158,23 +148,25 @@ export class AuthRoutes {
       return;
     }
 
-    const user = toType<IUser>(await User.findOneAndUpdate(
-      { uuid: decodedToken.uuid },
-      {
-        name,
-        surname,
-        thirdname,
-        school,
-        state: 'registered',
-      }
-    ).catch(() => null));
+    const user = toType<IUser>(
+      await User.findOneAndUpdate(
+        { uuid: decodedToken.uuid },
+        {
+          name,
+          surname,
+          thirdname,
+          school,
+          state: 'registered',
+        },
+      ).catch(() => null),
+    );
 
     if (!user) {
       res.status(404).send({ errors: ['Користувача не знайдено'] });
       return;
     }
 
-    const token = await generateToken(user as IUser).catch(() => null);
+    const token = await generateToken(user).catch(() => null);
 
     res.status(200).send({
       data: {
@@ -201,11 +193,11 @@ export class AuthRoutes {
       return;
     }
 
-    const token = await generateToken(user as IUser).catch(() => null);
+    const token = await generateToken(user).catch(() => null);
 
     if (token) {
       res.status(200).json({
-        data: { user: getUserPublicProps(user as IUser), token },
+        data: { user: getUserPublicProps(user), token },
       });
 
       return;
@@ -221,10 +213,7 @@ export class AuthRoutes {
    * @param  {string} password1
    * @param  {string=''} password2
    */
-  private async comparePasswords(
-    password1: string,
-    password2: string = ''
-  ): Promise<boolean> {
+  private async comparePasswords(password1: string, password2: string = ''): Promise<boolean> {
     return await bcrypt.compare(password1, password2);
   }
 
@@ -233,11 +222,7 @@ export class AuthRoutes {
    * @param  {IUser} user
    * @param  {string} password
    */
-  private async handleSignUpPending(
-    res: Response,
-    user: IUser,
-    password: string
-  ): Promise<boolean> {
+  private async handleSignUpPending(res: Response, user: IUser, password: string): Promise<boolean> {
     if (user.state !== 'pending') {
       return false;
     }

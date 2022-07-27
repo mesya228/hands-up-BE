@@ -1,6 +1,6 @@
 import { router } from '../router';
-import { getSimplePublicProps, verifyAccessToken } from '../../utils';
-import { SubjectSchema } from '../../models';
+import { getSimplePublicProps, toType, verifyAccessToken } from '../../utils';
+import { ISubject, SubjectSchema } from '../../models';
 import { v4 as uuidv4 } from 'uuid';
 import { Request, Response } from 'express';
 
@@ -12,11 +12,45 @@ export class SubjectRoutes {
   }
 
   private initRoutes() {
+    router.get(`${this.ROUTE_API}`, this.getSubjects.bind(this));
     router.post(`${this.ROUTE_API}`, this.createSubject.bind(this));
   }
 
   /**
-   * Create class
+   * Get subjects
+   *
+   * @param  {Request} req
+   * @param  {Response} res
+   */
+  private async getSubjects(req: Request, res: Response) {
+    const { name } = req.query || {};
+    const parsedQuery = ((name || '') as string).trim();
+
+    if (!parsedQuery) {
+      res.status(400).send({ errors: ['Не всі дані заповнено'] });
+      return;
+    }
+
+    if (!verifyAccessToken(req.headers.authorization, res)) {
+      return;
+    }
+
+    const foundSubjects = toType<ISubject[]>(
+      await SubjectSchema.find({
+        name: { $regex: parsedQuery, $options: 'i' },
+      }).catch(() => null),
+    );
+
+    if (!foundSubjects?.length) {
+      res.status(400).send({ errors: ['Немає предметів з такою назвою'] });
+      return;
+    }
+
+    res.status(200).send({ data: foundSubjects?.map((subject) => getSimplePublicProps(subject)) });
+  }
+
+  /**
+   * Create subject
    *
    * @param  {Request} req
    * @param  {Response} res
@@ -45,13 +79,9 @@ export class SubjectRoutes {
       return;
     }
 
-    const newSubject = await SubjectSchema.create({ id: uuidv4(), name }).catch(
-      () => {
-        res
-          .status(400)
-          .send({ errors: ['Помилка системи, спробуйте пізніше!'] });
-      }
-    );
+    const newSubject = await SubjectSchema.create({ id: uuidv4(), name }).catch(() => {
+      res.status(400).send({ errors: ['Помилка системи, спробуйте пізніше!'] });
+    });
 
     if (newSubject) {
       res.status(200).send({ data: getSimplePublicProps(newSubject) });

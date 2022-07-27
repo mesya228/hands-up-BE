@@ -1,5 +1,5 @@
 import { router } from '../router';
-import { getSimplePublicProps, verifyAccessToken } from '../../utils';
+import { getSimplePublicProps, toType, verifyAccessToken } from '../../utils';
 import { ISchool, School } from '../../models';
 import { v4 as uuidv4 } from 'uuid';
 import { Request, Response } from 'express';
@@ -29,19 +29,19 @@ export class SchoolRoutes {
       return;
     }
 
-    const schools = await School.find({
-      name: { $regex: query, $options: 'i' },
-    }).catch(() => null);
+    const schools = toType<ISchool[]>(
+      await School.find({
+        name: { $regex: query, $options: 'i' },
+      }).catch(() => null),
+    );
 
-    if (!schools) {
+    if (!schools?.length) {
       res.status(404).send({ errors: ['Школу не знайдено'] });
       return;
     }
 
     res.status(200).send({
-      data: (schools as ISchool[]).map((school) =>
-        getSimplePublicProps(school)
-      ),
+      data: schools.map((school) => getSimplePublicProps(school)),
     });
   }
 
