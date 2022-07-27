@@ -1,7 +1,7 @@
 import { IUser, User } from '../../models';
 import { router } from '../router';
 
-import { generateToken, getUserPublicProps, verifyAccessToken } from '../../utils';
+import { getUserPublicProps, verifyAccessToken } from '../../utils';
 import { Request, Response } from 'express';
 
 export class SettingsRoutes {
@@ -13,6 +13,7 @@ export class SettingsRoutes {
 
   private initRoutes() {
     router.patch(`${this.ROUTE_API}/:uuid`, this.updateUser.bind(this));
+    router.patch(`${this.ROUTE_API}/:uuid/photo`, this.uploadPhoto.bind(this));
     router.patch(`${this.ROUTE_API}/:uuid/subject`, this.addUserSubject.bind(this));
   }
 
@@ -55,6 +56,28 @@ export class SettingsRoutes {
     res.status(200).send({
       user: getUserPublicProps(user),
     });
+  }
+
+  /**
+   * Upload user photo
+   *
+   * @param  {Request} req
+   * @param  {Response} res
+   */
+  private async uploadPhoto(req: Request, res: Response) {
+    const body = req.body || {};
+    console.log(body);
+
+    if (!body) {
+      res.status(400).send({ errors: ['Не всі дані заповнено'] });
+      return;
+    }
+
+    if (!verifyAccessToken(req.headers.authorization, res)) {
+      return;
+    }
+
+    res.status(400).send({ errors: ['Помилка системи'] });
   }
 
   /**

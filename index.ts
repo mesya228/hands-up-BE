@@ -1,5 +1,6 @@
 import express from 'express';
 import mongoose from 'mongoose';
+import formData from 'express-form-data';
 import cors from 'cors';
 import { initRouters, router } from './src/router/router';
 const app = express();
@@ -15,6 +16,7 @@ app.listen(PORT, () => {
       origin: ['http://localhost:4200'],
     })
   );
+  app.use(formData.parse({}));
   app.use(router);
   mongoose.connect(DB_URL);
   console.log(`Server listening at ${PORT} port`);
