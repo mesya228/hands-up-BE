@@ -9,6 +9,7 @@ export const getUserPublicProps = ({
   surname,
   thirdname,
   username,
+  state,
 }: IUser): IUser => ({
   uuid,
   email,
@@ -18,6 +19,7 @@ export const getUserPublicProps = ({
   surname,
   thirdname,
   username,
+  state,
 });
 
 export const getSimplePublicProps = ({ id, name }: any) => ({

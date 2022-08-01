@@ -66,7 +66,6 @@ export class SettingsRoutes {
    */
   private async uploadPhoto(req: Request, res: Response) {
     const body = req.body || {};
-    console.log(body);
 
     if (!body) {
       res.status(400).send({ errors: ['Не всі дані заповнено'] });

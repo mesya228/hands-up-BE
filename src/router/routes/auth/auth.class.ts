@@ -1,14 +1,13 @@
-import { IUser, User } from '../../models';
-import { router } from '../router';
+import { IUser, User } from '../../../models';
+import { router } from '../../router';
 
 import bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
-import { generateAccessToken, generateToken, getUserPublicProps, toType, verifyAccessToken } from '../../utils';
+import { generateAccessToken, generateHashedPassword, generateToken, getUserPublicProps, toType, verifyAccessToken } from '../../../utils';
 import { Request, Response } from 'express';
 
 export class AuthRoutes {
   private readonly ROUTE_API = '/auth';
-  private readonly SALT: number | any = process.env.SALT;
 
   constructor() {
     this.initRoutes();
@@ -97,7 +96,7 @@ export class AuthRoutes {
    * @param  {string} email
    */
   private async createNewUser(res: Response, password: string, email: string) {
-    const hashedPassword = await this.generateHashedPassword(password);
+    const hashedPassword = await generateHashedPassword(password);
 
     const newUser = toType<IUser>(
       await User.create({
@@ -116,14 +115,6 @@ export class AuthRoutes {
     }
 
     this.getRegistrationData(newUser, res);
-  }
-
-  /**
-   * @param  {string} password
-   */
-  private async generateHashedPassword(password: string): Promise<string> {
-    const salt = await bcrypt.genSalt(this.SALT);
-    return await bcrypt.hash(password, salt);
   }
 
   /**

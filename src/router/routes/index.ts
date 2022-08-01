@@ -1,4 +1,4 @@
-export * from './auth';
+export * from './auth/auth.class';
 export * from './token.class';
 export * from './user.class';
 export * from './school.class';

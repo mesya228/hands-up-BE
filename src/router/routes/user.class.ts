@@ -90,7 +90,6 @@ export class UserRoutes {
         res.status(404).send({ errors: ['Користувачів не знайдено'] });
       }),
     );
-    console.log(users);
 
     if (!users?.length) {
       res.status(404).send({ errors: ['Користувача не знайдено'] });
