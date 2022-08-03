@@ -36,7 +36,7 @@ export const generateAccessToken = (payload: ITokenPayload | any): string => {
 
   return jwt.sign(
     { uuid, email, roles, state },
-    process.env.ACCESS_TOKEN_HASH || 'publicAccess',
+    process.env.ACCESS_TOKEN_HASH || 'accessTest',
     {
       expiresIn: '30m',
     }

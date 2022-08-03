@@ -3,7 +3,14 @@ import { router } from '../../router';
 
 import bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
-import { generateAccessToken, generateHashedPassword, generateToken, getUserPublicProps, toType, verifyAccessToken } from '../../../utils';
+import {
+  generateAccessToken,
+  generatePassword,
+  generateToken,
+  getUserPublicProps,
+  toType,
+  verifyAccessToken,
+} from '../../../utils';
 import { Request, Response } from 'express';
 
 export class AuthRoutes {
@@ -30,7 +37,7 @@ export class AuthRoutes {
 
     if (!email || !password) {
       res.status(400).json({
-        errors: ['Неправильні пошта або пароль'],
+        errors: ['Не всі дані заповнено'],
       });
 
       return;
@@ -69,7 +76,7 @@ export class AuthRoutes {
 
     if (!email || !password) {
       res.status(400).json({
-        errors: ['Неправильні пошта або пароль'],
+        errors: ['Не всі дані заповнено'],
       });
       return;
     }
@@ -91,12 +98,65 @@ export class AuthRoutes {
   }
 
   /**
+   * Finish sign up
+   *
+   * @param  {Request} req
+   * @param  {Response} res
+   */
+  private async signUpFinish(req: Request, res: Response) {
+    const { name, surname, thirdname, school } = req.body || {};
+
+    if (!name || !surname || !thirdname || !school) {
+      res.status(400).send({ errors: ['Не всі дані заповнено'] });
+      return;
+    }
+
+    const decodedToken = verifyAccessToken(req.headers.authorization, res, {
+      registrationState: true,
+    });
+
+    console.log('decodedToken', decodedToken);
+    if (!decodedToken) {
+      return;
+    }
+
+    const user = toType<IUser>(
+      await User.findOneAndUpdate(
+        { uuid: decodedToken.uuid },
+        {
+          name,
+          surname,
+          thirdname,
+          school,
+          state: 'registered',
+        },
+      ).catch(() => null),
+    );
+
+    console.log('user', user);
+    
+    if (!user) {
+      res.status(404).send({ errors: ['Користувача не знайдено'] });
+      return;
+    }
+
+    const token = await generateToken(user).catch(() => null);
+
+    res.status(200).send({
+      data: {
+        user: getUserPublicProps(user),
+        token,
+      },
+    });
+  }
+
+  /**
    * @param  {Response} res
    * @param  {string} password
    * @param  {string} email
    */
   private async createNewUser(res: Response, password: string, email: string) {
-    const hashedPassword = await generateHashedPassword(password);
+    const hashedPassword = await generatePassword(password);
 
     const newUser = toType<IUser>(
       await User.create({
@@ -115,56 +175,6 @@ export class AuthRoutes {
     }
 
     this.getRegistrationData(newUser, res);
-  }
-
-  /**
-   * Finish sign up
-   *
-   * @param  {Request} req
-   * @param  {Response} res
-   */
-  private async signUpFinish(req: Request, res: Response) {
-    const { name, surname, thirdname, school } = req.body || {};
-
-    if (!name || !surname || !thirdname || !school) {
-      res.status(400).send({ errors: ['Не всі дані заповнено'] });
-      return;
-    }
-
-    const decodedToken = verifyAccessToken(req.headers.authorization, res, {
-      registrationState: true,
-    });
-
-    if (!decodedToken) {
-      return;
-    }
-
-    const user = toType<IUser>(
-      await User.findOneAndUpdate(
-        { uuid: decodedToken.uuid },
-        {
-          name,
-          surname,
-          thirdname,
-          school,
-          state: 'registered',
-        },
-      ).catch(() => null),
-    );
-
-    if (!user) {
-      res.status(404).send({ errors: ['Користувача не знайдено'] });
-      return;
-    }
-
-    const token = await generateToken(user).catch(() => null);
-
-    res.status(200).send({
-      data: {
-        user: getUserPublicProps(user),
-        token,
-      },
-    });
   }
 
   /**
@@ -202,10 +212,10 @@ export class AuthRoutes {
 
   /**
    * @param  {string} password1
-   * @param  {string=''} password2
+   * @param  {string=''} password2 ONLY hashed password!
    */
-  private async comparePasswords(password1: string, password2: string = ''): Promise<boolean> {
-    return await bcrypt.compare(password1, password2);
+  private async comparePasswords(password: string, hashedPassword: string = ''): Promise<boolean> {
+    return await bcrypt.compare(password, hashedPassword);
   }
 
   /**
@@ -228,20 +238,26 @@ export class AuthRoutes {
   }
 
   /**
+   * Get registration on progress state data
+   *
    * @param  {IUser} user
    * @param  {Response} res
    */
   private getRegistrationData(user: IUser, res: Response) {
     const accessToken = generateAccessToken(user);
 
-    res.status(200).json({
-      data: {
-        completeRegister: true,
-        user: {
-          uuid: user.uuid,
-        },
-        token: { accessToken },
+    const data = {
+      completeRegister: true,
+      user: {
+        uuid: user.uuid,
       },
+      token: { accessToken },
+    };
+
+    res.status(200).json({
+      data,
     });
+
+    return data;
   }
 }

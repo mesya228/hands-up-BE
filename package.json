@@ -4,8 +4,9 @@
 	"main": "index.ts",
 	"scripts": {
 		"start": "nodemon index.ts",
-		"test": "jest",
-		"test:dev": "jest --coverage"
+		"test": "jest --watch",
+		"test:wc": "jest --watch --coverage",
+		"test:c": "jest --coverage"
 	},
 	"nodemonConfig": {
 		"watch": [

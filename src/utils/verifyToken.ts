@@ -17,13 +17,14 @@ export const verifyAccessToken = (
   const decodedToken = jwt.decode(accessToken) as any;
 
   if (checkTokenAccess(res, config, decodedToken)) {
+    console.log('CHECK FAILED', decodedToken);
     return null;
   }
 
   try {
     const tokenResponse = jwt.verify(
       accessToken,
-      process.env.ACCESS_TOKEN_HASH || ''
+      process.env.ACCESS_TOKEN_HASH || 'accessTest'
     ) as JwtPayload;
 
     if (tokenResponse) {
