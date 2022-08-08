@@ -115,7 +115,6 @@ export class AuthRoutes {
       registrationState: true,
     });
 
-    console.log('decodedToken', decodedToken);
     if (!decodedToken) {
       return;
     }
@@ -133,8 +132,6 @@ export class AuthRoutes {
       ).catch(() => null),
     );
 
-    console.log('user', user);
-    
     if (!user) {
       res.status(404).send({ errors: ['Користувача не знайдено'] });
       return;

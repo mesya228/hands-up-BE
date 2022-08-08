@@ -1,5 +1,5 @@
 export * from './auth/auth.class';
-export * from './token.class';
+export * from './token/token.class';
 export * from './user.class';
 export * from './school.class';
 export * from './class.class';

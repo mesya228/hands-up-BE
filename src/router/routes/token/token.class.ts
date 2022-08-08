@@ -1,7 +1,7 @@
-import { router } from '../router';
+import { router } from '../../router';
 
-import { generateAccessToken, verifyRefreshToken } from '../../utils';
-import { UserToken } from '../../models/token';
+import { generateAccessToken, verifyRefreshToken } from '../../../utils';
+import { UserToken } from '../../../models/token';
 import { Request, Response } from 'express';
 
 export class TokenRoutes {
@@ -12,12 +12,8 @@ export class TokenRoutes {
   }
 
   private initRoutes() {
-    router.post(`${this.ROUTE_API}/test`, async (req, res) => {
-      return res.status(200).json('I LOVE YOu');
-    });
-
     router.post(`${this.ROUTE_API}/refresh`, this.refreshToken.bind(this));
-    router.post(`${this.ROUTE_API}/delete`, this.deleteToken.bind(this));
+    router.delete(`${this.ROUTE_API}`, this.deleteToken.bind(this));
   }
 
   /**
@@ -32,7 +28,7 @@ export class TokenRoutes {
     }
 
     const token = await verifyRefreshToken(refreshToken).catch(() => null);
-
+    
     if (!token) {
       return res.status(400).json({ errors: ['Неправильний токен'] });
     }
@@ -55,20 +51,23 @@ export class TokenRoutes {
       const { refreshToken } = req.body || {};
 
       if (!refreshToken) {
-        return res.status(400).json({ errors: ['Неправильний токен'] });
+        return res.status(400).json({ errors: ['Токен відсутній'] });
       }
 
       const userToken = await UserToken.findOne({
         token: refreshToken,
-      });
+      }).catch(() => null);
 
+      console.log('userToken', userToken);
+      
       if (!userToken) {
-        return res.status(200).json({ data: { success: true } });
+        return res.status(400).json({ errors: ['Токен відсутній'], });
       }
 
       await userToken.remove();
       res.status(200).json({ data: { success: true } });
-    } catch (err) {
+    } catch (e) {
+      console.log('eeeeeeeeee', e);
       res.status(500).json({ data: { success: false } });
     }
   }

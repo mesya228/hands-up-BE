@@ -175,7 +175,7 @@ describe('Auth', () => {
 
   describe('signUpFinish', () => {
     it('should finish sign up', async () => {
-      const user = { uuid: 'test', email: 'test', roles: ['teacher'], state: 'pending' };
+      delete user.password;
       const token = generateAccessToken(user);
       jest.spyOn(User, 'findOneAndUpdate').mockResolvedValue(user);
 
@@ -190,8 +190,7 @@ describe('Auth', () => {
       expect(parsedRes.data?.token).toBeTruthy();
     });
 
-    it('should finish sign up', async () => {
-      const user = { uuid: 'test', email: 'test', roles: ['teacher'], state: 'pending' };
+    it('should handle user dont exist', async () => {
       const token = generateAccessToken(user);
       jest.spyOn(User, 'findOneAndUpdate').mockRejectedValue(null);
 

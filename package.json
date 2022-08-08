@@ -5,7 +5,7 @@
 	"scripts": {
 		"start": "nodemon index.ts",
 		"test": "jest --watch",
-		"test:wc": "jest --watch --coverage",
+		"test:wc": "jest --watch --coverage --detectOpenHandles",
 		"test:c": "jest --coverage"
 	},
 	"nodemonConfig": {

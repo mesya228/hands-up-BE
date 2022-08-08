@@ -7,7 +7,7 @@ import { ITokenPayload } from 'src/interfaces';
 export const verifyAccessToken = (
   accessToken: string | undefined,
   res: Response,
-  config: IVerifyTokenConfig = {}
+  config: IVerifyTokenConfig = {},
 ): ITokenPayload | null | undefined => {
   if (!accessToken) {
     res.status(404).send({ errors: ['Токен відсутній'] });
@@ -17,15 +17,11 @@ export const verifyAccessToken = (
   const decodedToken = jwt.decode(accessToken) as any;
 
   if (checkTokenAccess(res, config, decodedToken)) {
-    console.log('CHECK FAILED', decodedToken);
     return null;
   }
 
   try {
-    const tokenResponse = jwt.verify(
-      accessToken,
-      process.env.ACCESS_TOKEN_HASH || 'accessTest'
-    ) as JwtPayload;
+    const tokenResponse = jwt.verify(accessToken, process.env.ACCESS_TOKEN_HASH || 'accessTest') as JwtPayload;
 
     if (tokenResponse) {
       return decodedToken;
@@ -46,11 +42,7 @@ export const verifyAccessToken = (
  * @param  {string} compareId?
  * @param  {boolean} registrationState?
  */
-const checkTokenAccess = (
-  res: Response,
-  config: any,
-  decodedToken: ITokenPayload
-) => {
+const checkTokenAccess = (res: Response, config: any, decodedToken: ITokenPayload) => {
   const { registrationState, compareId } = config;
 
   if (
@@ -68,22 +60,30 @@ const checkTokenAccess = (
 };
 
 export const verifyRefreshToken = (refreshToken: string): Promise<any> => {
-  const privateKey = process.env.REFRESH_TOKEN_HASH || '';
+  const privateKey = process.env.REFRESH_TOKEN_HASH || 'publicRefresh';
 
-  return new Promise((resolve, reject) => {
-    UserToken.findOne({ token: refreshToken }, (err: any, token: any) => {
-      if (!token) {
-        return reject({ errors: ['Неправильний токен'] });
+  return new Promise(async (resolve, reject) => {
+    const token = await UserToken.findOne({ token: refreshToken }).catch(() => null) as any;
+
+    if (!token) {
+      return reject({ errors: ['Неправильний токен'] });
+    }
+
+    try {
+      const tokenDetails = jwt.verify(token, privateKey);
+      
+      if (tokenDetails) {
+        return resolve(tokenDetails);
       }
 
-      jwt.verify(refreshToken, privateKey, (err, tokenDetails) => {
-        if (err) {
-          return reject({ errors: ['Неправильний токен'] });
-        }
-
-        resolve(tokenDetails);
-      });
-    });
+      return reject({ errors: ['Неправильний токен'] });
+    } catch (e: any) {
+      const handler = tokenErrorHandlers[e.name];
+  
+      if (handler) {
+        return reject({ errors: ['Неправильний токен'] });
+      }
+    }
   });
 };
 
