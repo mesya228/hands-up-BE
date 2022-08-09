@@ -8,7 +8,7 @@ export const getUserPublicProps = ({
   school,
   surname,
   thirdname,
-  username,
+  login,
   state,
 }: IUser): IUser => ({
   uuid,
@@ -18,7 +18,7 @@ export const getUserPublicProps = ({
   school,
   surname,
   thirdname,
-  username,
+  login,
   state,
 });
 

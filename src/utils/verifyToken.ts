@@ -70,8 +70,8 @@ export const verifyRefreshToken = (refreshToken: string): Promise<any> => {
     }
 
     try {
-      const tokenDetails = jwt.verify(token, privateKey);
-      
+      const tokenDetails = jwt.verify(token.token, privateKey);
+
       if (tokenDetails) {
         return resolve(tokenDetails);
       }

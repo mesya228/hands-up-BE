@@ -24,7 +24,7 @@ const userSchema = new Schema({
     default: 'pending',
     require: false,
   },
-  username: {
+  login: {
     type: String,
     require: false,
   },
@@ -74,7 +74,7 @@ export interface IUser {
   name?: string;
   surname?: string;
   thirdname?: string;
-  username?: string;
+  login?: string;
 
   state?: 'registered' | 'pending';
   school?: string | ISchool;

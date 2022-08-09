@@ -47,7 +47,7 @@ export class ClassRoutes {
    * @param  {Response} res
    */
   private async createClass(req: Request, res: Response) {
-    const { name, schoolId, students } = req.body || {};
+    const { name, schoolId } = req.body || {};
     const parsedName = (name || '').trim();
 
     if (!name) {
@@ -66,7 +66,7 @@ export class ClassRoutes {
       return;
     }
 
-    const newClass = await ClassSchema.create({ id: uuidv4(), name, schoolId, students }).catch(() => null);
+    const newClass = await ClassSchema.create({ id: uuidv4(), name, schoolId }).catch(() => null);
 
     if (!newClass) {
       res.status(400).send({ errors: ['Помилка системи, спробуйте пізніше!'] });

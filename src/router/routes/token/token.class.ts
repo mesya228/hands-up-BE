@@ -58,8 +58,6 @@ export class TokenRoutes {
         token: refreshToken,
       }).catch(() => null);
 
-      console.log('userToken', userToken);
-      
       if (!userToken) {
         return res.status(400).json({ errors: ['Токен відсутній'], });
       }
@@ -67,7 +65,6 @@ export class TokenRoutes {
       await userToken.remove();
       res.status(200).json({ data: { success: true } });
     } catch (e) {
-      console.log('eeeeeeeeee', e);
       res.status(500).json({ data: { success: false } });
     }
   }

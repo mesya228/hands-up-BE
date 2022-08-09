@@ -1,3 +1,3 @@
-export function toType<T = null>(data: any) {
-  return data as T | null;
+export function toType<T = null>(data: any): T {
+  return data as T;
 }

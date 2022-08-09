@@ -16,6 +16,7 @@ const classSchema = new Schema({
   students: {
     type: Array<String>,
     require: true,
+    default: [],
   },
 });
 
