@@ -133,8 +133,8 @@ export class ClassRoutes {
 
     res.status(200).send({
       data: {
-        ...classData,
-        users: parsedUsers,
+        ...getClassPublicProps(classData),
+        students: parsedUsers,
       },
     });
   }
