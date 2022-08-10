@@ -8,6 +8,7 @@ const handlers = {
   [RequestErrors.WrongLoginPassword]: 400,
   [RequestErrors.UserExist]: 400,
   [RequestErrors.UserLack]: 404,
+  [RequestErrors.UsersLack]: 404,
   [RequestErrors.ClassExist]: 400,
   [RequestErrors.ClassLack]: 404,
   [RequestErrors.TokenLack]: 404,

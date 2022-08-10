@@ -1,8 +1,16 @@
 import { router } from '../router';
-import { getClassPublicProps, getSimplePublicProps, getUserPublicProps, toType, verifyAccessToken } from '../../utils';
+import {
+  getClassPublicProps,
+  getSimplePublicProps,
+  getUserPublicProps,
+  reportError,
+  toType,
+  verifyAccessToken,
+} from '../../utils';
 import { IClass, ClassSchema, School, User, ISchool, IUser } from '../../models';
 import { v4 as uuidv4 } from 'uuid';
 import { Request, Response } from 'express';
+import { RequestErrors } from 'src/enums';
 
 export class ClassRoutes {
   private readonly ROUTE_API = '/class';
@@ -13,7 +21,7 @@ export class ClassRoutes {
 
   private initRoutes() {
     router.get(`${this.ROUTE_API}`, this.getClasses.bind(this));
-    router.get(`${this.ROUTE_API}/:id/users`, this.getUsersByClass.bind(this));
+    router.get(`${this.ROUTE_API}/:id`, this.getClass.bind(this));
     router.post(`${this.ROUTE_API}`, this.createClass.bind(this));
   }
 
@@ -31,7 +39,7 @@ export class ClassRoutes {
     const classes = toType<IClass[]>(await ClassSchema.find({}).catch(() => []));
 
     if (!classes) {
-      res.status(404).send({ errors: ['Клас не знайдено'] });
+      reportError(res, RequestErrors.ClassLack);
       return;
     }
 
@@ -51,7 +59,7 @@ export class ClassRoutes {
     const parsedName = (name || '').trim();
 
     if (!name) {
-      res.status(400).send({ errors: ['Не всі дані заповнено'] });
+      reportError(res, RequestErrors.DataLack);
       return;
     }
 
@@ -62,14 +70,14 @@ export class ClassRoutes {
     const foundClass = await ClassSchema.findOne({ name: parsedName, schoolId }).catch(() => null);
 
     if (foundClass) {
-      res.status(400).send({ errors: ['Клас з такою назвою вже існує'] });
+      reportError(res, RequestErrors.ClassExist);
       return;
     }
 
     const newClass = await ClassSchema.create({ id: uuidv4(), name, schoolId }).catch(() => null);
 
     if (!newClass) {
-      res.status(400).send({ errors: ['Помилка системи, спробуйте пізніше!'] });
+      reportError(res, RequestErrors.SystemError);
       return;
     }
 
@@ -79,16 +87,22 @@ export class ClassRoutes {
   }
 
   /**
-   * Find users by class id
+   * Get class by id
    *
    * @param  {Request} req
    * @param  {Response} res
    */
-  private async getUsersByClass(req: Request, res: Response) {
+  private async getClass(req: Request, res: Response) {
     const classId = req.params.id;
 
     if (!verifyAccessToken(req.headers.authorization, res)) {
       return;
+    }
+
+    const classData = toType<IClass>(await ClassSchema.findOne({ id: classId }).catch(() => null));
+
+    if (!classData) {
+      return reportError(res, RequestErrors.ClassLack);
     }
 
     const school = toType<ISchool>(await School.findOne({ classes: classId }).catch(() => null));
@@ -101,7 +115,7 @@ export class ClassRoutes {
     );
 
     if (!users?.length) {
-      res.status(404).send({ errors: ['Користовачів не знайдено'] });
+      reportError(res, RequestErrors.UsersLack);
       return;
     }
 
@@ -116,6 +130,11 @@ export class ClassRoutes {
       });
     }
 
-    res.status(200).send({ data: parsedUsers });
+    res.status(200).send({
+      data: {
+        ...classData,
+        users: parsedUsers,
+      },
+    });
   }
 }
