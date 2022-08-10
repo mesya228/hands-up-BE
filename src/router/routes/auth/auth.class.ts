@@ -9,10 +9,12 @@ import {
   generateToken,
   getUserPublicProps,
   random,
+  reportError,
   toType,
   verifyAccessToken,
 } from '../../../utils';
 import { Request, Response } from 'express';
+import { RequestErrors } from 'src/enums';
 
 export class AuthRoutes {
   private readonly ROUTE_API = '/auth';
@@ -39,9 +41,7 @@ export class AuthRoutes {
     const { login, password } = req.body || {};
 
     if (!login || !password) {
-      res.status(400).json({
-        errors: ['Не всі дані заповнено'],
-      });
+      reportError(res, RequestErrors.DataLack);
 
       return;
     }
@@ -56,16 +56,12 @@ export class AuthRoutes {
         return;
       }
 
-      res.status(400).json({
-        errors: ['Неправильні пошта або пароль'],
-      });
+      reportError(res, RequestErrors.WrongLoginPassword);
 
       return;
     }
 
-    res.status(400).json({
-      errors: ['Неправильні пошта або пароль'],
-    });
+    reportError(res, RequestErrors.WrongLoginPassword);
   }
 
   /**
@@ -78,9 +74,7 @@ export class AuthRoutes {
     const { email, password } = req.body || {};
 
     if (!email || !password) {
-      res.status(400).json({
-        errors: ['Не всі дані заповнено'],
-      });
+      reportError(res, RequestErrors.DataLack);
       return;
     }
 
@@ -91,9 +85,7 @@ export class AuthRoutes {
         return;
       }
 
-      res.status(400).json({
-        errors: ['Користувач з такою поштою вже зареєстрований'],
-      });
+      reportError(res, RequestErrors.UserExist);
       return;
     }
 
@@ -110,7 +102,7 @@ export class AuthRoutes {
     const { name, surname, thirdname, school } = req.body || {};
 
     if (!name || !surname || !thirdname || !school) {
-      res.status(400).send({ errors: ['Не всі дані заповнено'] });
+      reportError(res, RequestErrors.DataLack);
       return;
     }
 
@@ -136,7 +128,7 @@ export class AuthRoutes {
     );
 
     if (!user) {
-      res.status(404).send({ errors: ['Користувача не знайдено'] });
+      reportError(res, RequestErrors.UserLack);
       return;
     }
 
@@ -160,9 +152,7 @@ export class AuthRoutes {
     const { name, surname, classId } = req.body || {};
 
     if (!name || !surname || !classId) {
-      res.status(400).json({
-        errors: ['Не всі дані заповнено'],
-      });
+      reportError(res, RequestErrors.DataLack);
       return;
     }
 
@@ -210,9 +200,7 @@ export class AuthRoutes {
     );
 
     if (!newUser) {
-      res.status(400).json({
-        errors: ['Помилка системи, спробуйте пізніше'],
-      });
+      reportError(res, RequestErrors.SystemError);
       return;
     }
 
@@ -254,9 +242,7 @@ export class AuthRoutes {
     );
 
     if (!newUser) {
-      res.status(400).json({
-        errors: ['Помилка системи, спробуйте пізніше'],
-      });
+      reportError(res, RequestErrors.SystemError);
       return;
     }
 
@@ -313,9 +299,7 @@ export class AuthRoutes {
       return;
     }
 
-    res.status(400).json({
-      errors: ['Помилка системи, спробуйте пізніше!'],
-    });
+    reportError(res, RequestErrors.SystemError);
     return;
   }
 

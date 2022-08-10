@@ -1,3 +1,4 @@
+import { RequestErrors } from 'src/enums';
 import { getApp } from 'src/helpers';
 import { UserToken } from 'src/models/token';
 import { generatePassword, generateToken } from 'src/utils';
@@ -55,9 +56,9 @@ describe('Token', () => {
     it('should filter emty token', async () => {
       const res = await request(app).post('/token/refresh').send({});
 
-      expect(res.statusCode).toBe(400);
+      expect(res.statusCode).toBe(404);
       expect(JSON.parse(res.text)).toEqual({
-        errors: ['Токен відсутній'],
+        errors: [RequestErrors.TokenLack],
       });
     });
   });
@@ -67,9 +68,9 @@ describe('Token', () => {
       jest.spyOn(UserToken, 'findOne').mockRejectedValue(null);
       const res = await request(app).delete('/token').send({ refreshToken: 'test' });
 
-      expect(res.statusCode).toBe(400);
+      expect(res.statusCode).toBe(404);
       expect(JSON.parse(res.text)).toEqual({
-        errors: ['Токен відсутній'],
+        errors: [RequestErrors.TokenLack],
       });
     });
 
@@ -98,9 +99,9 @@ describe('Token', () => {
     it('should filter empty token', async () => {
       const res = await request(app).delete('/token').send({});
 
-      expect(res.statusCode).toBe(400);
+      expect(res.statusCode).toBe(404);
       expect(JSON.parse(res.text)).toEqual({
-        errors: ['Токен відсутній'],
+        errors: [RequestErrors.TokenLack],
       });
     });
   });

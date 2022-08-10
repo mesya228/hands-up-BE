@@ -122,7 +122,7 @@ export class ClassMarksRoutes {
     }
 
     if (!foundClassMarks.teachers.includes(decodedToken.uuid)) {
-      res.status(400).send({ errors: ['У доступі відмовлено тест'] });
+      res.status(400).send({ errors: ['У доступі відмовлено'] });
       return;
     }
 

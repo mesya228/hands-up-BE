@@ -1,8 +1,9 @@
 import { router } from '../../router';
 
-import { generateAccessToken, verifyRefreshToken } from '../../../utils';
+import { generateAccessToken, reportError, verifyRefreshToken } from '../../../utils';
 import { UserToken } from '../../../models/token';
 import { Request, Response } from 'express';
+import { RequestErrors } from 'src/enums';
 
 export class TokenRoutes {
   private readonly ROUTE_API = '/token';
@@ -24,7 +25,7 @@ export class TokenRoutes {
     const { refreshToken } = req.body || {};
 
     if (!refreshToken) {
-      return res.status(400).json({ errors: ['Токен відсутній'] });
+      return reportError(res, RequestErrors.TokenLack);
     }
 
     const token = await verifyRefreshToken(refreshToken).catch(() => null);
@@ -51,7 +52,7 @@ export class TokenRoutes {
       const { refreshToken } = req.body || {};
 
       if (!refreshToken) {
-        return res.status(400).json({ errors: ['Токен відсутній'] });
+        return reportError(res, RequestErrors.TokenLack);
       }
 
       const userToken = await UserToken.findOne({
@@ -59,7 +60,7 @@ export class TokenRoutes {
       }).catch(() => null);
 
       if (!userToken) {
-        return res.status(400).json({ errors: ['Токен відсутній'], });
+        return reportError(res, RequestErrors.TokenLack);
       }
 
       await userToken.remove();

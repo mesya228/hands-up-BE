@@ -1,8 +1,9 @@
 import { UserToken } from '../models/token';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import { Response } from 'express';
-import { TokenErrors } from '../enums';
+import { RequestErrors, TokenErrors } from '../enums';
 import { ITokenPayload } from 'src/interfaces';
+import { reportError } from './reportError';
 
 export const verifyAccessToken = (
   accessToken: string | undefined,
@@ -10,7 +11,7 @@ export const verifyAccessToken = (
   config: IVerifyTokenConfig = {},
 ): ITokenPayload | null | undefined => {
   if (!accessToken) {
-    res.status(404).send({ errors: ['Токен відсутній'] });
+    reportError(res, RequestErrors.TokenLack);
     return null;
   }
 

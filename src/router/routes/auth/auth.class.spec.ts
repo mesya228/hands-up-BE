@@ -5,6 +5,7 @@ import { generateAccessToken, generatePassword } from 'src/utils';
 import { AuthRoutes } from './auth.class';
 
 import request from 'supertest';
+import { RequestErrors } from 'src/enums';
 
 describe('Auth', () => {
   const app = getApp();
@@ -70,7 +71,7 @@ describe('Auth', () => {
 
       expect(res.statusCode).toBe(400);
       expect(JSON.parse(res.text)).toEqual({
-        errors: ['Неправильні пошта або пароль'],
+        errors: [RequestErrors.WrongLoginPassword],
       });
     });
 
@@ -81,7 +82,7 @@ describe('Auth', () => {
 
       expect(res.statusCode).toBe(400);
       expect(JSON.parse(res.text)).toEqual({
-        errors: ['Неправильні пошта або пароль'],
+        errors: [RequestErrors.WrongLoginPassword],
       });
     });
 
@@ -90,14 +91,14 @@ describe('Auth', () => {
 
       expect(res.statusCode).toBe(400);
       expect(JSON.parse(res.text)).toEqual({
-        errors: ['Не всі дані заповнено'],
+        errors: [RequestErrors.DataLack],
       });
 
       res = await request(app).post('/auth/sign-in').send({});
 
       expect(res.statusCode).toBe(400);
       expect(JSON.parse(res.text)).toEqual({
-        errors: ['Не всі дані заповнено'],
+        errors: [RequestErrors.DataLack],
       });
     });
   });
@@ -126,7 +127,7 @@ describe('Auth', () => {
 
       expect(res.statusCode).toBe(400);
       expect(JSON.parse(res.text)).toEqual({
-        errors: ['Помилка системи, спробуйте пізніше'],
+        errors: [RequestErrors.SystemError],
       });
     });
 
@@ -137,7 +138,7 @@ describe('Auth', () => {
 
       expect(res.statusCode).toBe(400);
       expect(JSON.parse(res.text)).toEqual({
-        errors: ['Користувач з такою поштою вже зареєстрований'],
+        errors: [RequestErrors.UserExist],
       });
     });
 
@@ -161,14 +162,14 @@ describe('Auth', () => {
 
       expect(res.statusCode).toBe(400);
       expect(JSON.parse(res.text)).toEqual({
-        errors: ['Не всі дані заповнено'],
+        errors: [RequestErrors.DataLack],
       });
 
       res = await request(app).post('/auth/sign-up-start').send({});
 
       expect(res.statusCode).toBe(400);
       expect(JSON.parse(res.text)).toEqual({
-        errors: ['Не всі дані заповнено'],
+        errors: [RequestErrors.DataLack],
       });
     });
   });
@@ -200,7 +201,7 @@ describe('Auth', () => {
         .send({ name: 'test', surname: 'test', thirdname: 'test', school: 1 });
 
       expect(res.statusCode).toBe(404);
-      expect(JSON.parse(res.text)).toEqual({ errors: ['Користувача не знайдено'] });
+      expect(JSON.parse(res.text)).toEqual({ errors: [RequestErrors.UserLack] });
     });
 
     it('should handle empty token', async () => {
@@ -210,7 +211,7 @@ describe('Auth', () => {
 
       expect(res.statusCode).toBe(404);
       expect(JSON.parse(res.text)).toEqual({
-        errors: ['Токен відсутній'],
+        errors: [RequestErrors.TokenLack],
       });
     });
 
@@ -221,14 +222,14 @@ describe('Auth', () => {
 
       expect(res.statusCode).toBe(400);
       expect(JSON.parse(res.text)).toEqual({
-        errors: ['Не всі дані заповнено'],
+        errors: [RequestErrors.DataLack],
       });
 
       res = await request(app).patch('/auth/sign-up-finish').send({});
 
       expect(res.statusCode).toBe(400);
       expect(JSON.parse(res.text)).toEqual({
-        errors: ['Не всі дані заповнено'],
+        errors: [RequestErrors.DataLack],
       });
     });
   });
@@ -267,7 +268,7 @@ describe('Auth', () => {
         
         expect(res.statusCode).toBe(404);
         expect(JSON.parse(res.text)).toEqual({
-          errors: ['Токен відсутній'],
+          errors: [RequestErrors.TokenLack],
         });
     });
 
@@ -289,7 +290,7 @@ describe('Auth', () => {
         
         expect(res.statusCode).toBe(400);
         expect(JSON.parse(res.text)).toEqual({
-          errors: ['Помилка системи, спробуйте пізніше'],
+          errors: [RequestErrors.SystemError],
         });
     });
 
@@ -298,14 +299,14 @@ describe('Auth', () => {
 
       expect(res.statusCode).toEqual(400);
       expect(JSON.parse(res.text)).toEqual({
-        errors: ['Не всі дані заповнено'],
+        errors: [RequestErrors.DataLack],
       });
 
       res = await request(app).post('/auth/add-student').send(undefined);
 
       expect(res.statusCode).toEqual(400);
       expect(JSON.parse(res.text)).toEqual({
-        errors: ['Не всі дані заповнено'],
+        errors: [RequestErrors.DataLack],
       });
     });
   });
