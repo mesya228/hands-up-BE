@@ -29,7 +29,7 @@ describe('Token', () => {
       jest.spyOn(UserToken as any, 'create').mockResolvedValue({} as any);
       jest.spyOn(UserToken, 'findOne').mockResolvedValue(null);
       const refreshToken = await generateToken(user);
-      jest.spyOn(UserToken, 'findOne').mockResolvedValue(refreshToken.refreshToken);
+      jest.spyOn(UserToken, 'findOne').mockResolvedValue({ token: refreshToken.refreshToken });
 
       const res = await request(app).post('/token/refresh').send({ refreshToken });
       const parsedRes = JSON.parse(res.text);

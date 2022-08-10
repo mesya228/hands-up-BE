@@ -1,5 +1,5 @@
 import { getApp } from 'src/helpers';
-import { User } from 'src/models';
+import { ClassSchema, User } from 'src/models';
 import { UserToken } from 'src/models/token';
 import { generateAccessToken, generatePassword } from 'src/utils';
 import { AuthRoutes } from './auth.class';
@@ -32,7 +32,7 @@ describe('Auth', () => {
       jest.spyOn(UserToken, 'findOne').mockResolvedValue(null);
       jest.spyOn(User, 'findOne').mockResolvedValue(user as any);
 
-      const res = await request(app).post('/auth/sign-in').send({ email: 'test', password: 'test123' });
+      const res = await request(app).post('/auth/sign-in').send({ login: 'test', password: 'test123' });
       const parsedRes = JSON.parse(res.text);
 
       expect(res.statusCode).toBe(200);
@@ -52,7 +52,7 @@ describe('Auth', () => {
       // jest.spyOn(UserToken, 'findOne').mockResolvedValue(null);
       jest.spyOn(User, 'findOne').mockResolvedValue(user as any);
 
-      const res = await request(app).post('/auth/sign-in').send({ email: 'test', password: 'test123' });
+      const res = await request(app).post('/auth/sign-in').send({ login: 'test', password: 'test123' });
       const parsedRes = JSON.parse(res.text);
 
       // expect(res.statusCode).toBe(200);
@@ -66,7 +66,7 @@ describe('Auth', () => {
     it('should handle user dont exist', async () => {
       jest.spyOn(User, 'findOne').mockRejectedValue(null);
 
-      const res = await request(app).post('/auth/sign-in').send({ email: 'test', password: 'test123' });
+      const res = await request(app).post('/auth/sign-in').send({ login: 'test', password: 'test123' });
 
       expect(res.statusCode).toBe(400);
       expect(JSON.parse(res.text)).toEqual({
@@ -77,7 +77,7 @@ describe('Auth', () => {
     it('should handle wrong password', async () => {
       jest.spyOn(User, 'findOne').mockResolvedValue(user as any);
 
-      const res = await request(app).post('/auth/sign-in').send({ email: 'test', password: 'test_123' });
+      const res = await request(app).post('/auth/sign-in').send({ login: 'test', password: 'test_123' });
 
       expect(res.statusCode).toBe(400);
       expect(JSON.parse(res.text)).toEqual({
@@ -227,6 +227,83 @@ describe('Auth', () => {
       res = await request(app).patch('/auth/sign-up-finish').send({});
 
       expect(res.statusCode).toBe(400);
+      expect(JSON.parse(res.text)).toEqual({
+        errors: ['Не всі дані заповнено'],
+      });
+    });
+  });
+
+  describe('addStudent', () => {
+    it('should add student', async () => {
+      const token = generateAccessToken(user);
+      const newStudent = {
+        name: 'testName', surname: 'testSurname'
+      };
+
+      jest.spyOn(User, 'findOne').mockResolvedValue({ school: 'test' });
+      jest.spyOn(User, 'find').mockResolvedValue([{}]);
+      jest.spyOn(ClassSchema, 'findOneAndUpdate').mockResolvedValue(null);
+      jest.spyOn(User, 'create').mockResolvedValue({...newStudent} as never);
+
+      let res = await request(app)
+        .post('/auth/add-student')
+        .set('authorization', token)
+        .send({...newStudent, classId: 'testClass'});
+        
+      const parsedRes = JSON.parse(res.text);
+      console.log(parsedRes);
+      expect(res.statusCode).toBe(200);
+      expect(parsedRes.data).toMatchObject(newStudent);
+    });
+
+    it('should handle empty token', async () => {
+      const newStudent = {
+        name: 'testName', surname: 'testSurname'
+      };
+
+      let res = await request(app)
+        .post('/auth/add-student')
+        .send({...newStudent, classId: 'testClass'});
+        
+        expect(res.statusCode).toBe(404);
+        expect(JSON.parse(res.text)).toEqual({
+          errors: ['Токен відсутній'],
+        });
+    });
+
+    it('should handle create user system error', async () => {
+      const token = generateAccessToken(user);
+      const newStudent = {
+        name: 'testName', surname: 'testSurname'
+      };
+
+      jest.spyOn(User, 'findOne').mockResolvedValue({ school: 'test' });
+      jest.spyOn(User, 'find').mockResolvedValue([{}]);
+      jest.spyOn(ClassSchema, 'findOneAndUpdate').mockResolvedValue(null);
+      jest.spyOn(User, 'create').mockRejectedValue(null as never);
+
+      let res = await request(app)
+        .post('/auth/add-student')
+        .set('authorization', token)
+        .send({...newStudent, classId: 'testClass'});
+        
+        expect(res.statusCode).toBe(400);
+        expect(JSON.parse(res.text)).toEqual({
+          errors: ['Помилка системи, спробуйте пізніше'],
+        });
+    });
+
+    it('should handle empty fields', async () => {
+      let res = await request(app).post('/auth/add-student').send({ name: '', surname: '', classId: '' });
+
+      expect(res.statusCode).toEqual(400);
+      expect(JSON.parse(res.text)).toEqual({
+        errors: ['Не всі дані заповнено'],
+      });
+
+      res = await request(app).post('/auth/add-student').send(undefined);
+
+      expect(res.statusCode).toEqual(400);
       expect(JSON.parse(res.text)).toEqual({
         errors: ['Не всі дані заповнено'],
       });
