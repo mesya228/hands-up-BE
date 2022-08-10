@@ -10,7 +10,7 @@ import {
 import { IClass, ClassSchema, School, User, ISchool, IUser } from '../../models';
 import { v4 as uuidv4 } from 'uuid';
 import { Request, Response } from 'express';
-import { RequestErrors } from 'src/enums';
+import { RequestErrors } from '../../enums';
 
 export class ClassRoutes {
   private readonly ROUTE_API = '/class';
@@ -111,6 +111,7 @@ export class ClassRoutes {
       await User.find({
         classes: classId,
         school: school?.id,
+        role: 'student'
       }).catch(() => []),
     );
 

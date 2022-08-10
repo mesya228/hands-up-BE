@@ -14,7 +14,7 @@ import {
   verifyAccessToken,
 } from '../../../utils';
 import { Request, Response } from 'express';
-import { RequestErrors } from 'src/enums';
+import { RequestErrors } from '../../../enums';
 
 export class AuthRoutes {
   private readonly ROUTE_API = '/auth';
@@ -163,7 +163,7 @@ export class AuthRoutes {
     }
 
     const teacher = await this.findUser({ email: decodedToken.email });
-
+    
     this.createNewStudent(res, { ...req.body, schoolId: teacher?.school });
   }
 
@@ -185,6 +185,7 @@ export class AuthRoutes {
 
     const hashedPassword = await generatePassword(password);
 
+    console.log(schoolId);
     const newUser = toType<IUser>(
       await User.create({
         uuid: uuidv4(),

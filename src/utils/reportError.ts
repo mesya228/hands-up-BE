@@ -1,5 +1,5 @@
 import { Response } from 'express';
-import { RequestErrors } from 'src/enums';
+import { RequestErrors } from '../enums';
 
 const handlers = {
   [RequestErrors.SystemError]: 400,

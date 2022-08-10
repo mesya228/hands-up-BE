@@ -5,7 +5,7 @@ import { generateAccessToken, generatePassword } from 'src/utils';
 import { AuthRoutes } from './auth.class';
 
 import request from 'supertest';
-import { RequestErrors } from 'src/enums';
+import { RequestErrors } from '../../../enums';
 
 describe('Auth', () => {
   const app = getApp();
@@ -252,7 +252,6 @@ describe('Auth', () => {
         .send({...newStudent, classId: 'testClass'});
         
       const parsedRes = JSON.parse(res.text);
-      console.log(parsedRes);
       expect(res.statusCode).toBe(200);
       expect(parsedRes.data).toMatchObject(newStudent);
     });

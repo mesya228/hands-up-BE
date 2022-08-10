@@ -45,7 +45,7 @@ const userSchema = new Schema({
     require: false,
   },
   school: {
-    type: Object,
+    type: String,
     require: false,
   },
   phone: {

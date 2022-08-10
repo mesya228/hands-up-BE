@@ -1,4 +1,4 @@
-import { RequestErrors } from 'src/enums';
+import { RequestErrors } from '../../../enums';
 import { getApp } from 'src/helpers';
 import { UserToken } from 'src/models/token';
 import { generatePassword, generateToken } from 'src/utils';

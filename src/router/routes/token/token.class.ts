@@ -3,7 +3,7 @@ import { router } from '../../router';
 import { generateAccessToken, reportError, verifyRefreshToken } from '../../../utils';
 import { UserToken } from '../../../models/token';
 import { Request, Response } from 'express';
-import { RequestErrors } from 'src/enums';
+import { RequestErrors } from '../../../enums';
 
 export class TokenRoutes {
   private readonly ROUTE_API = '/token';
