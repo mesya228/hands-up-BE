@@ -1,8 +1,9 @@
 import { router } from '../router';
-import { getClassMarksProps, toType, verifyAccessToken } from '../../utils';
-import { IClassMarks, ClassMarks } from '../../models';
+import { getClassMarksProps, reportError, toType, verifyAccessToken } from '../../utils';
+import { IClassMarks, ClassMarks, ClassSchema, IClass, User } from '../../models';
 import { v4 as uuidv4 } from 'uuid';
 import { Request, Response } from 'express';
+import { RequestErrors } from 'src/enums';
 
 export class ClassMarksRoutes {
   private readonly ROUTE_API = '/class-marks';
@@ -27,7 +28,7 @@ export class ClassMarksRoutes {
     const { subjectId, classId } = req.query || {};
 
     if (!subjectId && !classId) {
-      res.status(400).send({ errors: ['Не всі дані заповнено'] });
+      reportError(res, RequestErrors.DataLack);
       return;
     }
 
@@ -35,12 +36,12 @@ export class ClassMarksRoutes {
       return;
     }
 
-    const classMarks = toType<IClassMarks[]>(await ClassMarks.find({ $or: [{ subjectId }, { classId }] }).catch(
-      () => [],
-    ));
+    const classMarks = toType<IClassMarks[]>(
+      await ClassMarks.find({ $or: [{ subjectId }, { classId }] }).catch(() => []),
+    );
 
     if (!classMarks?.length) {
-      res.status(404).send({ errors: ['Клас не знайдено'] });
+      reportError(res, RequestErrors.ClassLack);
       return;
     }
 
@@ -59,7 +60,7 @@ export class ClassMarksRoutes {
     const { id, classId, subjectId } = req.body || {};
 
     if (!id || !classId || !subjectId) {
-      res.status(400).send({ errors: ['Не всі дані заповнено'] });
+      reportError(res, RequestErrors.DataLack);
       return;
     }
 
@@ -73,24 +74,40 @@ export class ClassMarksRoutes {
     }).catch(() => null);
 
     if (foundClassMarks) {
-      res.status(400).send({ errors: ['Клас вже додано'] });
+      reportError(res, RequestErrors.ClassExist);
       return;
     }
 
-    const newClassMarks = toType<IClassMarks>(await ClassMarks.create({
-      id: uuidv4(),
-      classId,
-      subjectId,
-      teachers: [id],
-      marks: [],
-    }).catch(() => null));
+    const newClassMarks = toType<IClassMarks>(
+      await ClassMarks.create({
+        id: uuidv4(),
+        classId,
+        subjectId,
+        teachers: [id],
+        marks: [],
+      }).catch(() => null),
+    );
 
     if (newClassMarks) {
       res.status(200).send({ data: getClassMarksProps(newClassMarks) });
-      return;
+    } else {
+      reportError(res, RequestErrors.SystemError);
     }
 
-    res.status(400).send({ errors: ['Помилка системи, спробуйте пізніше!'] });
+    const foundClass = toType<IClass>(ClassSchema.find({ id: classId }).catch(() => null));
+
+    foundClass.students.forEach(async (student) => {
+      await User.findOneAndUpdate(
+        {
+          uuid: student,
+        },
+        {
+          $addToSet: {
+            subjects: subjectId,
+          },
+        },
+      );
+    });
   }
 
   /**
@@ -104,7 +121,7 @@ export class ClassMarksRoutes {
     const { student, mark, date } = req.body || {};
 
     if (!id || !student || !mark || !date) {
-      res.status(400).send({ errors: ['Не всі дані заповнено'] });
+      reportError(res, RequestErrors.DataLack);
       return;
     }
 
@@ -117,12 +134,12 @@ export class ClassMarksRoutes {
     const foundClassMarks = toType<IClassMarks>(await ClassMarks.findOne({ id }).catch(() => null));
 
     if (!foundClassMarks) {
-      res.status(400).send({ errors: ['Клас відсутній'] });
+      reportError(res, RequestErrors.ClassLack);
       return;
     }
 
     if (!foundClassMarks.teachers.includes(decodedToken.uuid)) {
-      res.status(400).send({ errors: ['У доступі відмовлено'] });
+      reportError(res, RequestErrors.AccessDenied);
       return;
     }
 

@@ -1,4 +1,4 @@
-import { ClassSchema, IClass, IUser, User } from '../../../models';
+import { ClassSchema, IClass, IUser, User, StatisticsSchema, IStatistics } from '../../../models';
 import { router } from '../../router';
 
 import bcrypt from 'bcrypt';
@@ -173,7 +173,12 @@ export class AuthRoutes {
    * @param  {string} email
    */
   private async createNewStudent(res: Response, body: any) {
-    const { name, surname, classId, schoolId } = body || {};
+    const { name, surname, classId, subjectId, schoolId } = body || {};
+
+    if (!name || !surname || !classId || !subjectId || !schoolId) {
+      reportError(res, RequestErrors.DataLack);
+      return;
+    }
 
     let { login, password } = this.getLoginAndPassword(name, surname);
 
@@ -185,7 +190,6 @@ export class AuthRoutes {
 
     const hashedPassword = await generatePassword(password);
 
-    console.log(schoolId);
     const newUser = toType<IUser>(
       await User.create({
         uuid: uuidv4(),
@@ -193,6 +197,7 @@ export class AuthRoutes {
         name,
         surname,
         school: schoolId,
+        subjects: [subjectId],
         classes: [classId],
         password: hashedPassword,
         roles: ['student'],
@@ -205,13 +210,20 @@ export class AuthRoutes {
       return;
     }
 
-    await this.addStudentToClass(classId, newUser.uuid);
-
     res.status(200).json({
       data: { ...getUserPublicProps(newUser), password },
     });
+
+    await this.addStudentToClass(classId, newUser.uuid);
+    await this.createUserStatistics(newUser.uuid);
   }
 
+  /**
+   * Add student to class in DB
+   * 
+   * @param  {string} classId
+   * @param  {string} userId
+   */
   private async addStudentToClass(classId: string, userId: string) {
     return toType<IClass>(
       ClassSchema.findOneAndUpdate(
@@ -221,6 +233,20 @@ export class AuthRoutes {
             students: userId as any,
           },
         },
+      ).catch(() => null),
+    );
+  }
+
+  /**
+   * Add student to class in DB
+   * 
+   * @param  {string} classId
+   * @param  {string} userId
+   */
+  private async createUserStatistics(userId: string) {
+    return toType<IStatistics>(
+      StatisticsSchema.create(
+        { uuid: userId },
       ).catch(() => null),
     );
   }
