@@ -3,7 +3,7 @@ import { getClassMarksProps, reportError, toType, verifyAccessToken } from '../.
 import { IClassMarks, ClassMarks, ClassSchema, IClass, User } from '../../models';
 import { v4 as uuidv4 } from 'uuid';
 import { Request, Response } from 'express';
-import { RequestErrors } from 'src/enums';
+import { RequestErrors } from '../../enums';
 
 export class ClassMarksRoutes {
   private readonly ROUTE_API = '/class-marks';
