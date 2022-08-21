@@ -1,7 +1,7 @@
 import { UserToken } from '../models/token';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import { Response } from 'express';
-import { RequestErrors, TokenErrors } from '../enums';
+import { RequestErrors, TokenErrors, UserRoles } from '../enums';
 import { ITokenPayload } from 'src/interfaces';
 import { reportError } from './reportError';
 
@@ -44,17 +44,22 @@ export const verifyAccessToken = (
  * @param  {boolean} registrationState?
  */
 const checkTokenAccess = (res: Response, config: any, decodedToken: ITokenPayload) => {
-  const { registrationState, compareId } = config;
+  const { registrationState, compareId, adminRequest } = config;
 
   if (
-    (!registrationState && decodedToken && decodedToken.state === 'pending') ||
-    (registrationState && decodedToken && decodedToken.state === 'complete')
+    (!registrationState && decodedToken?.state === 'pending') ||
+    (registrationState && decodedToken?.state === 'complete')
   ) {
     res.status(400).send({ errors: ['Реєстрацію не завершено'] });
     return true;
   }
 
   if (compareId && compareId !== decodedToken.uuid) {
+    res.status(400).send({ errors: ['У доступі відмовлено'] });
+    return true;
+  }
+
+  if (adminRequest && decodedToken?.roles.includes(UserRoles.admin)) {
     res.status(400).send({ errors: ['У доступі відмовлено'] });
     return true;
   }

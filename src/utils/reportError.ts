@@ -1,7 +1,7 @@
 import { Response } from 'express';
 import { RequestErrors } from '../enums';
 
-const handlers = {
+const handlers: any = {
   [RequestErrors.SystemError]: 400,
   [RequestErrors.AccessDenied]: 400,
   [RequestErrors.DataLack]: 400,
@@ -13,6 +13,7 @@ const handlers = {
   [RequestErrors.ClassLack]: 404,
   [RequestErrors.TokenLack]: 404,
 };
+
 export function reportError(res: Response, type: RequestErrors): void {
   const code = handlers[type];
 

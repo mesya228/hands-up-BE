@@ -11,14 +11,17 @@ const DB_URL = process.env.DB_URL as string;
 
 app.listen(PORT, () => {
   initRouters();
+
   app.use(express.json());
   app.use(
     cors({
       origin: ['http://localhost:4200'],
-    })
+    }),
   );
   app.use(formData.parse({}));
   app.use(router);
+
   mongoose.connect(DB_URL);
+
   console.log(`Server listening at ${PORT} port`);
 });
