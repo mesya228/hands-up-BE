@@ -1,6 +1,6 @@
 import { router } from '../router';
 import { getClassMarksProps, reportError, toType, verifyAccessToken } from '../../utils';
-import { IClassMarks, ClassMarks, ClassSchema, IClass, User } from '../../models';
+import { IClassMarks, ClassMarks, ClassSchema, IClass, User, StatisticsSchema, IStatistics } from '../../models';
 import { v4 as uuidv4 } from 'uuid';
 import { Request, Response } from 'express';
 import { RequestErrors } from '../../enums';
@@ -118,9 +118,9 @@ export class ClassMarksRoutes {
    */
   private async addClassMark(req: Request, res: Response) {
     const { id } = req.params || {};
-    const { student, mark, date } = req.body || {};
+    const { studentId, mark, date } = req.body || {};
 
-    if (!id || !student || !mark || !date) {
+    if (!id || !studentId || !mark || !date) {
       reportError(res, RequestErrors.DataLack);
       return;
     }
@@ -149,10 +149,77 @@ export class ClassMarksRoutes {
       { id },
       {
         ...parsedObject,
-        marks: [...parsedObject.marks, { student, mark, date }],
+        marks: [...parsedObject.marks, { student: studentId, mark, date }],
       },
     );
-
+    
     res.status(200).send({ data: ['Оцінку додано'] });
+    
+    this.updateStudentStatistics(studentId, parsedObject.subjectId, mark);
+  }
+
+  private async updateStudentStatistics(studentId: string, subjectId: string, mark: number) {
+    const userStatistics = toType<IStatistics>(await StatisticsSchema.findOne({ uuid: studentId }).catch(() => null));
+
+    let updatedSubjects = this.getUpdatedSubjects(userStatistics.subjects, subjectId, mark);
+
+    // await this.updateAchivments(userStatistics, updatedSubjects.level, subjectId, mark);
+
+    await (userStatistics as any)
+      .updateOne({
+        subjects: updatedSubjects.subjects,
+      })
+      .catch(() => null);
+  }
+
+  // private async updateAchivments(userStatistics: any, level: number, subjectId: string, mark: number) {
+  //   if (level % 5 === 0) {
+  //     const achievmentId = findAchievment(subjectId, mark);
+
+  //     if (achievmentId) {
+  //       await userStatistics
+  //         .updateOne({
+  //           $push: {
+  //             achievments: achievmentId
+  //           }
+  //         })
+  //         .catch(() => null);
+  //     }
+  //   }
+  // }
+
+  private getUpdatedSubjects(subjects: any[], subjectId: string, mark: number): any {
+    let updatedLevel: number = 1;
+    let updatedSubjects = [];
+
+    const updateSubject = (subjects: any[]) => subjects.map((subject) => {
+      if (subject.id === subjectId) {
+        const updatedExpirience = (subject?.expirience || 0) + mark;
+
+        updatedLevel = Math.floor(updatedExpirience / (12 + subject.level)) + 1;
+
+        subject = {
+          ...subject,
+          expirience: Math.round(updatedExpirience),
+          level: updatedLevel,
+        };
+      }
+
+      return subject;
+    });
+    
+    if (subjects?.length) {
+      updatedSubjects = updateSubject(subjects);
+    } else {
+      updatedSubjects = updateSubject([
+        {
+          id: subjectId,
+          expirience: 0,
+          level: 0,
+        }
+      ]);
+    }
+
+    return {subjects: updatedSubjects, level: updatedLevel};
   }
 }

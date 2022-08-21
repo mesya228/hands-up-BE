@@ -38,7 +38,7 @@ export class ClassRoutes {
 
     const classes = toType<IClass[]>(await ClassSchema.find({}).catch(() => []));
 
-    if (!classes) {
+    if (!classes.length) {
       reportError(res, RequestErrors.ClassLack);
       return;
     }
