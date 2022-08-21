@@ -1,4 +1,5 @@
 import { Schema, model } from 'mongoose';
+import { UserRoles } from '../enums';
 import { IClass } from './class';
 import { ISchool } from './school';
 import { ISubject } from './subject';
@@ -14,7 +15,7 @@ const userSchema = new Schema({
   },
   roles: {
     type: [String],
-    enum: ['student', 'teacher', 'admin'],
+    enum: [UserRoles.student, UserRoles.teacher, UserRoles.admin],
     default: ['teacher'],
     require: true,
   },

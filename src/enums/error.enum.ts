@@ -8,5 +8,6 @@ export enum RequestErrors {
   UsersLack = 'Користувачів не знайдено',
   ClassExist = 'Клас вже додано',
   ClassLack = 'Клас не знайдено',
+  AchievmentsLack = 'Нагород не знайдено',
   TokenLack = 'Токен не знайдено',
 }
