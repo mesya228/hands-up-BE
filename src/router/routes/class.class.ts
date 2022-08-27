@@ -32,11 +32,17 @@ export class ClassRoutes {
    * @param  {Response} res
    */
   private async getClasses(req: Request, res: Response) {
-    if (!verifyAccessToken(req.headers.authorization, res)) {
+    const { query } = req.query || {};
+
+    const decodedToken = verifyAccessToken(req.headers.authorization, res);
+
+    if (!decodedToken) {
       return;
     }
 
-    const classes = toType<IClass[]>(await ClassSchema.find({}).catch(() => []));
+    const classes = toType<IClass[]>(await ClassSchema.find({
+      name: { $regex: query, $options: 'i' },
+    }).catch(() => []));
 
     if (!classes.length) {
       reportError(res, RequestErrors.ClassLack);

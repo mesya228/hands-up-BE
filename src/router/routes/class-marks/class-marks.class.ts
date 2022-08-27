@@ -1,9 +1,9 @@
-import { router } from '../router';
-import { getAchievments, getClassMarksProps, reportError, toType, verifyAccessToken } from '../../utils';
-import { IClassMarks, ClassMarks, ClassSchema, IClass, User, StatisticsSchema, IStatistics } from '../../models';
+import { router } from '../../router';
+import { getAchievments, getClassMarksProps, reportError, toType, verifyAccessToken } from '../../../utils';
+import { IClassMarks, ClassMarks, ClassSchema, IClass, User, StatisticsSchema, IStatistics } from '../../../models';
 import { v4 as uuidv4 } from 'uuid';
 import { Request, Response } from 'express';
-import { RequestErrors } from '../../enums';
+import { RequestErrors } from '../../../enums';
 
 export class ClassMarksRoutes {
   private readonly ROUTE_API = '/class-marks';

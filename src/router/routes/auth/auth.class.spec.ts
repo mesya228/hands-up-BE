@@ -249,7 +249,7 @@ describe('Auth', () => {
       let res = await request(app)
         .post('/auth/add-student')
         .set('authorization', token)
-        .send({...newStudent, classId: 'testClass'});
+        .send({...newStudent, classId: 'testClass', subjectId: 'testSubject' });
         
       const parsedRes = JSON.parse(res.text);
       expect(res.statusCode).toBe(200);
@@ -263,7 +263,7 @@ describe('Auth', () => {
 
       let res = await request(app)
         .post('/auth/add-student')
-        .send({...newStudent, classId: 'testClass'});
+        .send({...newStudent, classId: 'testClass', subjectId: 'testSubject' });
         
         expect(res.statusCode).toBe(404);
         expect(JSON.parse(res.text)).toEqual({
@@ -285,7 +285,7 @@ describe('Auth', () => {
       let res = await request(app)
         .post('/auth/add-student')
         .set('authorization', token)
-        .send({...newStudent, classId: 'testClass'});
+        .send({...newStudent, classId: 'testClass', subjectId: 'test' });
         
         expect(res.statusCode).toBe(400);
         expect(JSON.parse(res.text)).toEqual({

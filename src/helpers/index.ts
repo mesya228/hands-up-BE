@@ -1,1 +1,1 @@
-export { getApp } from './unit-tests-mock';
+export * from './unit-tests-mock';

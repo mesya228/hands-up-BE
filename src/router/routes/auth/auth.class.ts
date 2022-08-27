@@ -149,9 +149,9 @@ export class AuthRoutes {
    * @param  {Response} res
    */
   private async addStudent(req: Request, res: Response) {
-    const { name, surname, classId } = req.body || {};
+    const { name, surname, classId, subjectId } = req.body || {};
 
-    if (!name || !surname || !classId) {
+    if (!name || !surname || !classId || !subjectId) {
       reportError(res, RequestErrors.DataLack);
       return;
     }
