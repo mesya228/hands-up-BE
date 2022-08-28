@@ -1,4 +1,4 @@
-import { IUser, User } from '../../models';
+import { IUser, UserSchema } from '../../models';
 import { router } from '../router';
 
 import { getUserPublicProps, toType, verifyAccessToken } from '../../utils';
@@ -37,7 +37,7 @@ export class SettingsRoutes {
       return;
     }
 
-    const user = toType<IUser>(await User.findOneAndUpdate(
+    const user = toType<IUser>(await UserSchema.findOneAndUpdate(
       { uuid },
       {
         name,
@@ -99,7 +99,7 @@ export class SettingsRoutes {
       return;
     }
 
-    const user = toType<IUser>(await User.findOneAndUpdate(
+    const user = toType<IUser>(await UserSchema.findOneAndUpdate(
       { uuid },
       {
         $push: {

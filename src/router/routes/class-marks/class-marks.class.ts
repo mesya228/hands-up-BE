@@ -1,6 +1,6 @@
 import { router } from '../../router';
 import { getAchievments, getClassMarksProps, reportError, toType, verifyAccessToken } from '../../../utils';
-import { IClassMarks, ClassMarks, ClassSchema, IClass, User, StatisticsSchema, IStatistics } from '../../../models';
+import { IClassMarks, ClassMarksSchema, ClassSchema, IClass, UserSchema, StatisticsSchema, IStatistics, IAchievment } from '../../../models';
 import { v4 as uuidv4 } from 'uuid';
 import { Request, Response } from 'express';
 import { RequestErrors } from '../../../enums';
@@ -37,7 +37,7 @@ export class ClassMarksRoutes {
     }
 
     const classMarks = toType<IClassMarks[]>(
-      await ClassMarks.find({ $or: [{ subjectId }, { classId }] }).catch(() => []),
+      await ClassMarksSchema.find({ $or: [{ subjectId }, { classId }] }).catch(() => []),
     );
 
     if (!classMarks?.length) {
@@ -68,7 +68,7 @@ export class ClassMarksRoutes {
       return;
     }
 
-    const foundClassMarks = await ClassMarks.findOne({
+    const foundClassMarks = await ClassMarksSchema.findOne({
       teachers: id,
       classId,
     }).catch(() => null);
@@ -79,7 +79,7 @@ export class ClassMarksRoutes {
     }
 
     const newClassMarks = toType<IClassMarks>(
-      await ClassMarks.create({
+      await ClassMarksSchema.create({
         id: uuidv4(),
         classId,
         subjectId,
@@ -97,7 +97,7 @@ export class ClassMarksRoutes {
     const foundClass = toType<IClass>(ClassSchema.find({ id: classId }).catch(() => null));
 
     foundClass.students.forEach(async (student) => {
-      await User.findOneAndUpdate(
+      await UserSchema.findOneAndUpdate(
         {
           uuid: student,
         },
@@ -131,7 +131,7 @@ export class ClassMarksRoutes {
       return;
     }
 
-    const foundClassMarks = toType<IClassMarks>(await ClassMarks.findOne({ id }).catch(() => null));
+    const foundClassMarks = toType<IClassMarks>(await ClassMarksSchema.findOne({ id }).catch(() => null));
 
     if (!foundClassMarks) {
       reportError(res, RequestErrors.ClassLack);
@@ -145,7 +145,7 @@ export class ClassMarksRoutes {
 
     const parsedObject = getClassMarksProps(foundClassMarks);
 
-    await ClassMarks.updateOne(
+    await ClassMarksSchema.updateOne(
       { id },
       {
         ...parsedObject,
@@ -190,17 +190,13 @@ export class ClassMarksRoutes {
    * @param  {string} subjectId
    */
   private async updateAchievments(userStatistics: any, level: number, subjectId: string) {
-    if (level % 5 !== 0) {
-      return;
-    }
-
     const achievments = await getAchievments();
-    const achievment = achievments.find((a) => a.level === level && a.subjectId === subjectId);
+    const achievment = achievments.find((a: IAchievment) => Number(a?.level) === +level && a.subjectId === subjectId);
 
     if (achievment) {
       await userStatistics
         .updateOne({
-          $push: {
+          $addToSet: {
             achievments: achievment.id,
           },
         })

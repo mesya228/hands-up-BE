@@ -63,7 +63,7 @@ const userSchema = new Schema({
   },
 });
 
-export const User = model('User', userSchema);
+export const UserSchema = model('User', userSchema);
 
 export interface IUser {
   uuid: string;

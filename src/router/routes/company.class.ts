@@ -1,4 +1,4 @@
-import { Company } from "../../models";
+import { CompanySchema } from "../../models";
 import { router } from "../router";
 
 const ROUTE_API = "/company";
@@ -7,7 +7,7 @@ export const initCompanyRoutes = () => {
   router.post(ROUTE_API + `/getStatus`, (req, res) => {
     const { query } = req.body || {};
 
-    Company.find(
+    CompanySchema.find(
       {
         $or: [
           { name: { $regex: query, $options: "i" } },

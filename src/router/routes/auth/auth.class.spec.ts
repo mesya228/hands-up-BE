@@ -1,5 +1,5 @@
 import { getApp } from 'src/helpers';
-import { ClassSchema, User } from 'src/models';
+import { ClassSchema, UserSchema } from 'src/models';
 import { UserToken } from 'src/models/token';
 import { generateAccessToken, generatePassword } from 'src/utils';
 import { AuthRoutes } from './auth.class';
@@ -31,7 +31,7 @@ describe('Auth', () => {
     it('should return user', async () => {
       jest.spyOn(UserToken as any, 'create').mockResolvedValue({} as any);
       jest.spyOn(UserToken, 'findOne').mockResolvedValue(null);
-      jest.spyOn(User, 'findOne').mockResolvedValue(user as any);
+      jest.spyOn(UserSchema, 'findOne').mockResolvedValue(user as any);
 
       const res = await request(app).post('/auth/sign-in').send({ login: 'test', password: 'test123' });
       const parsedRes = JSON.parse(res.text);
@@ -51,7 +51,7 @@ describe('Auth', () => {
       user.state = 'pending';
       jest.spyOn(UserToken as any, 'create').mockResolvedValue({} as any);
       // jest.spyOn(UserToken, 'findOne').mockResolvedValue(null);
-      jest.spyOn(User, 'findOne').mockResolvedValue(user as any);
+      jest.spyOn(UserSchema, 'findOne').mockResolvedValue(user as any);
 
       const res = await request(app).post('/auth/sign-in').send({ login: 'test', password: 'test123' });
       const parsedRes = JSON.parse(res.text);
@@ -65,7 +65,7 @@ describe('Auth', () => {
     });
 
     it('should handle user dont exist', async () => {
-      jest.spyOn(User, 'findOne').mockRejectedValue(null);
+      jest.spyOn(UserSchema, 'findOne').mockRejectedValue(null);
 
       const res = await request(app).post('/auth/sign-in').send({ login: 'test', password: 'test123' });
 
@@ -76,7 +76,7 @@ describe('Auth', () => {
     });
 
     it('should handle wrong password', async () => {
-      jest.spyOn(User, 'findOne').mockResolvedValue(user as any);
+      jest.spyOn(UserSchema, 'findOne').mockResolvedValue(user as any);
 
       const res = await request(app).post('/auth/sign-in').send({ login: 'test', password: 'test_123' });
 
@@ -105,8 +105,8 @@ describe('Auth', () => {
 
   describe('signUpStart', () => {
     it('should create new user', async () => {
-      jest.spyOn(User, 'findOne').mockResolvedValue(null);
-      jest.spyOn(User as any, 'create').mockResolvedValue(user);
+      jest.spyOn(UserSchema, 'findOne').mockResolvedValue(null);
+      jest.spyOn(UserSchema as any, 'create').mockResolvedValue(user);
 
       let res = await request(app).post('/auth/sign-up-start').send({ email: 'test', password: 'test123' });
       const parsedRes = JSON.parse(res.text);
@@ -120,8 +120,8 @@ describe('Auth', () => {
     });
 
     it('should failed creating new user', async () => {
-      jest.spyOn(User, 'findOne').mockResolvedValue(null);
-      jest.spyOn(User as any, 'create').mockRejectedValue(null);
+      jest.spyOn(UserSchema, 'findOne').mockResolvedValue(null);
+      jest.spyOn(UserSchema as any, 'create').mockRejectedValue(null);
 
       let res = await request(app).post('/auth/sign-up-start').send({ email: 'test', password: 'test123' });
 
@@ -132,7 +132,7 @@ describe('Auth', () => {
     });
 
     it('should handle existing user', async () => {
-      jest.spyOn(User, 'findOne').mockResolvedValue(user as any);
+      jest.spyOn(UserSchema, 'findOne').mockResolvedValue(user as any);
 
       let res = await request(app).post('/auth/sign-up-start').send({ email: 'test', password: 'test123' });
 
@@ -144,7 +144,7 @@ describe('Auth', () => {
 
     it('should handle pending user', async () => {
       user.state = 'pending';
-      jest.spyOn(User, 'findOne').mockResolvedValue(user as any);
+      jest.spyOn(UserSchema, 'findOne').mockResolvedValue(user as any);
 
       let res = await request(app).post('/auth/sign-up-start').send({ email: 'test', password: 'test123' });
       const parsedRes = JSON.parse(res.text);
@@ -178,7 +178,7 @@ describe('Auth', () => {
     it('should finish sign up', async () => {
       delete user.password;
       const token = generateAccessToken(user);
-      jest.spyOn(User, 'findOneAndUpdate').mockResolvedValue(user);
+      jest.spyOn(UserSchema, 'findOneAndUpdate').mockResolvedValue(user);
 
       let res = await request(app)
         .patch('/auth/sign-up-finish')
@@ -193,7 +193,7 @@ describe('Auth', () => {
 
     it('should handle user dont exist', async () => {
       const token = generateAccessToken(user);
-      jest.spyOn(User, 'findOneAndUpdate').mockRejectedValue(null);
+      jest.spyOn(UserSchema, 'findOneAndUpdate').mockRejectedValue(null);
 
       let res = await request(app)
         .patch('/auth/sign-up-finish')
@@ -241,10 +241,10 @@ describe('Auth', () => {
         name: 'testName', surname: 'testSurname'
       };
 
-      jest.spyOn(User, 'findOne').mockResolvedValue({ school: 'test' });
-      jest.spyOn(User, 'find').mockResolvedValue([{}]);
+      jest.spyOn(UserSchema, 'findOne').mockResolvedValue({ school: 'test' });
+      jest.spyOn(UserSchema, 'find').mockResolvedValue([{}]);
       jest.spyOn(ClassSchema, 'findOneAndUpdate').mockResolvedValue(null);
-      jest.spyOn(User, 'create').mockResolvedValue({...newStudent} as never);
+      jest.spyOn(UserSchema, 'create').mockResolvedValue({...newStudent} as never);
 
       let res = await request(app)
         .post('/auth/add-student')
@@ -277,10 +277,10 @@ describe('Auth', () => {
         name: 'testName', surname: 'testSurname'
       };
 
-      jest.spyOn(User, 'findOne').mockResolvedValue({ school: 'test' });
-      jest.spyOn(User, 'find').mockResolvedValue([{}]);
+      jest.spyOn(UserSchema, 'findOne').mockResolvedValue({ school: 'test' });
+      jest.spyOn(UserSchema, 'find').mockResolvedValue([{}]);
       jest.spyOn(ClassSchema, 'findOneAndUpdate').mockResolvedValue(null);
-      jest.spyOn(User, 'create').mockRejectedValue(null as never);
+      jest.spyOn(UserSchema, 'create').mockRejectedValue(null as never);
 
       let res = await request(app)
         .post('/auth/add-student')

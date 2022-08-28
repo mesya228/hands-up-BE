@@ -19,7 +19,7 @@ const schema = new Schema({
   },
 });
 
-export const Company = model("Company", schema);
+export const CompanySchema = model("CompanySchema", schema);
 
 export interface ICompany {
   name: string;

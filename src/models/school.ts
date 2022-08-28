@@ -11,7 +11,7 @@ const schoolSchema = new Schema({
   },
 });
 
-export const School = model('School', schoolSchema);
+export const SchoolSchema = model('School', schoolSchema);
 
 export interface ISchool {
   id: string;

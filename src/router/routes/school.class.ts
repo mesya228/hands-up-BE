@@ -1,6 +1,6 @@
 import { router } from '../router';
 import { getSimplePublicProps, toType, verifyAccessToken } from '../../utils';
-import { ISchool, School } from '../../models';
+import { ISchool, SchoolSchema } from '../../models';
 import { v4 as uuidv4 } from 'uuid';
 import { Request, Response } from 'express';
 
@@ -30,7 +30,7 @@ export class SchoolRoutes {
     }
 
     const schools = toType<ISchool[]>(
-      await School.find({
+      await SchoolSchema.find({
         name: { $regex: query, $options: 'i' },
       }).catch(() => []),
     );
@@ -64,14 +64,14 @@ export class SchoolRoutes {
       return;
     }
 
-    const school = await School.findOne({ name: parsedName }).catch(() => null);
+    const school = await SchoolSchema.findOne({ name: parsedName }).catch(() => null);
 
     if (school) {
       res.status(400).send({ errors: ['Школа з такою назвою вже існує'] });
       return;
     }
 
-    const newSchool = await School.create({ id: uuidv4(), name }).catch(() => null);
+    const newSchool = await SchoolSchema.create({ id: uuidv4(), name }).catch(() => null);
 
     if (!newSchool) {
       res.status(400).send({ errors: ['Помилка системи, спробуйте пізніше!'] });

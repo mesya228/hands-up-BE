@@ -4,9 +4,9 @@ import { ClassMarksRoutes } from './class-marks.class';
 import { RequestErrors } from '../../../enums';
 import { getApp, updateMock } from 'src/helpers';
 import { generateAccessToken } from 'src/utils';
-import { ClassMarks, StatisticsSchema } from 'src/models';
+import { ClassMarksSchema, StatisticsSchema } from 'src/models';
 
-describe('ClassMarks', () => {
+describe('ClassMarksSchema', () => {
   const app = getApp();
   let user: any;
 
@@ -23,8 +23,8 @@ describe('ClassMarks', () => {
 
   describe('addClassMark', () => {
     it('should add class mark', async () => {
-      jest.spyOn(ClassMarks, 'findOne').mockResolvedValue({ teachers: ['testUuid'], marks: [] });
-      jest.spyOn(ClassMarks, 'updateOne').mockResolvedValue({} as any);
+      jest.spyOn(ClassMarksSchema, 'findOne').mockResolvedValue({ teachers: ['testUuid'], marks: [] });
+      jest.spyOn(ClassMarksSchema, 'updateOne').mockResolvedValue({} as any);
       jest.spyOn(StatisticsSchema, 'findOne').mockResolvedValue({ subjects: [], marks: [], updateOne: updateMock() });
       const token = generateAccessToken(user);
 

@@ -7,7 +7,7 @@ import {
   toType,
   verifyAccessToken,
 } from '../../utils';
-import { IClass, ClassSchema, School, User, ISchool, IUser } from '../../models';
+import { IClass, ClassSchema, SchoolSchema, UserSchema, ISchool, IUser } from '../../models';
 import { v4 as uuidv4 } from 'uuid';
 import { Request, Response } from 'express';
 import { RequestErrors } from '../../enums';
@@ -43,11 +43,6 @@ export class ClassRoutes {
     const classes = toType<IClass[]>(await ClassSchema.find({
       name: { $regex: query, $options: 'i' },
     }).catch(() => []));
-
-    if (!classes.length) {
-      reportError(res, RequestErrors.ClassLack);
-      return;
-    }
 
     res.status(200).send({
       data: classes.map((classItem) => getClassPublicProps(classItem)),
@@ -111,10 +106,10 @@ export class ClassRoutes {
       return reportError(res, RequestErrors.ClassLack);
     }
 
-    const school = toType<ISchool>(await School.findOne({ classes: classId }).catch(() => null));
+    const school = toType<ISchool>(await SchoolSchema.findOne({ classes: classId }).catch(() => null));
 
     const users = toType<IUser[]>(
-      await User.find({
+      await UserSchema.find({
         classes: classId,
         school: school?.id,
         role: 'student'

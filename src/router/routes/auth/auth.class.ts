@@ -1,4 +1,4 @@
-import { ClassSchema, IClass, IUser, User, StatisticsSchema, IStatistics } from '../../../models';
+import { ClassSchema, IClass, IUser, UserSchema, StatisticsSchema, IStatistics } from '../../../models';
 import { router } from '../../router';
 
 import bcrypt from 'bcrypt';
@@ -115,7 +115,7 @@ export class AuthRoutes {
     }
 
     const user = toType<IUser>(
-      await User.findOneAndUpdate(
+      await UserSchema.findOneAndUpdate(
         { uuid: decodedToken.uuid },
         {
           name,
@@ -191,7 +191,7 @@ export class AuthRoutes {
     const hashedPassword = await generatePassword(password);
 
     const newUser = toType<IUser>(
-      await User.create({
+      await UserSchema.create({
         uuid: uuidv4(),
         login,
         name,
@@ -260,7 +260,7 @@ export class AuthRoutes {
     const hashedPassword = await generatePassword(password);
 
     const newUser = toType<IUser>(
-      await User.create({
+      await UserSchema.create({
         uuid: uuidv4(),
         email,
         password: hashedPassword,
@@ -296,14 +296,14 @@ export class AuthRoutes {
    * @param  {any} queryObj
    */
   private async findUser(queryObj: any): Promise<IUser | null> {
-    return toType<IUser>(await User.findOne(queryObj).catch(() => null));
+    return toType<IUser>(await UserSchema.findOne(queryObj).catch(() => null));
   }
 
   /**
    * @param  {any} queryObj
    */
   private async findUsers(queryObj: any): Promise<IUser[]> {
-    return toType<IUser[]>(await User.find(queryObj).catch(() => []));
+    return toType<IUser[]>(await UserSchema.find(queryObj).catch(() => []));
   }
 
   /**

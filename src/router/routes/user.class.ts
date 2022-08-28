@@ -1,14 +1,14 @@
 import {
-  ClassMarks,
+  ClassMarksSchema,
   ClassSchema,
   IClass,
   IClassMarks,
   ISchool,
   ISubject,
   IUser,
-  School,
+  SchoolSchema,
   SubjectSchema,
-  User,
+  UserSchema,
 } from '../../models';
 import { router } from '../router';
 import { getClassPublicProps, getSimplePublicProps, getUserPublicProps, toType, verifyAccessToken } from '../../utils';
@@ -43,7 +43,7 @@ export class UserRoutes {
     }
 
     const user = toType<IUser>(
-      await User.findOne({ uuid: decodedToken.uuid }).catch(() => {
+      await UserSchema.findOne({ uuid: decodedToken.uuid }).catch(() => {
         res.status(404).send({ errors: ['Користувача не знайдено'] });
       }),
     );
@@ -54,7 +54,7 @@ export class UserRoutes {
     }
 
     if (user.school) {
-      const school = toType<ISchool>(await School.findOne({ id: user.school }).catch(() => null));
+      const school = toType<ISchool>(await SchoolSchema.findOne({ id: user.school }).catch(() => null));
 
       if (school) {
         user.school = getSimplePublicProps(school);
@@ -79,7 +79,7 @@ export class UserRoutes {
     }
 
     const users = toType<IUser[]>(
-      await User.find({
+      await UserSchema.find({
         roles: 'student',
         $or: [
           { name: { $regex: parsedQuery, $options: 'i' } },
@@ -113,7 +113,7 @@ export class UserRoutes {
     }
 
     const user = toType<IUser>(
-      await User.findOne({ uuid }).catch(() => null),
+      await UserSchema.findOne({ uuid }).catch(() => null),
     );
 
     if (!user) {
@@ -122,7 +122,7 @@ export class UserRoutes {
     }
 
     if (user.school) {
-      const school = toType<ISchool>(await School.findOne({ id: user.school }).catch(() => null));
+      const school = toType<ISchool>(await SchoolSchema.findOne({ id: user.school }).catch(() => null));
 
       if (school) {
         user.school = getSimplePublicProps(school);
@@ -151,7 +151,7 @@ export class UserRoutes {
       return;
     }
 
-    const classMarks = toType<IClassMarks[]>(await ClassMarks.find({ subjectId, teachers: uuid }).catch(() => []));
+    const classMarks = toType<IClassMarks[]>(await ClassMarksSchema.find({ subjectId, teachers: uuid }).catch(() => []));
 
     const classesId = classMarks?.map((c) => c.classId);
 
@@ -184,7 +184,7 @@ export class UserRoutes {
       return;
     }
 
-    const user = toType<IUser>(await User.findOne({ uuid }).catch(() => null));
+    const user = toType<IUser>(await UserSchema.findOne({ uuid }).catch(() => null));
 
     if (!user) {
       res.status(404).send({ errors: ['Користовача не знайдено'] });

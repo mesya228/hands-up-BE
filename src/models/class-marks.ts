@@ -24,7 +24,7 @@ const classMarksSchema = new Schema({
   },
 });
 
-export const ClassMarks = model('ClassMarks', classMarksSchema);
+export const ClassMarksSchema = model('ClassMarks', classMarksSchema);
 
 export interface IClassMarks {
   id: string;
