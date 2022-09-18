@@ -15,7 +15,7 @@ export class ClassMarksRoutes {
   private initRoutes() {
     router.get(`${this.ROUTE_API}`, this.getClassMarks.bind(this));
     router.post(`${this.ROUTE_API}`, this.createClassMarks.bind(this));
-    router.patch(`${this.ROUTE_API}/:id`, this.addClassMark.bind(this));
+    router.patch(`${this.ROUTE_API}/add`, this.addClassMark.bind(this));
   }
 
   /**
@@ -96,7 +96,7 @@ export class ClassMarksRoutes {
 
     const foundClass = toType<IClass>(ClassSchema.find({ id: classId }).catch(() => null));
 
-    foundClass.students.forEach(async (student) => {
+    foundClass.students?.forEach(async (student) => {
       await UserSchema.findOneAndUpdate(
         {
           uuid: student,
@@ -117,10 +117,10 @@ export class ClassMarksRoutes {
    * @param {Response} res
    */
   private async addClassMark(req: Request, res: Response) {
-    const { id } = req.params || {};
-    const { studentId, mark, date } = req.body || {};
+    const { subjectId, classId } = req.query || {};
+    const { studentId, mark } = req.body || {};
 
-    if (!id || !studentId || !mark || !date) {
+    if (!subjectId || !classId || !studentId || !mark) {
       reportError(res, RequestErrors.DataLack);
       return;
     }
@@ -131,7 +131,7 @@ export class ClassMarksRoutes {
       return;
     }
 
-    const foundClassMarks = toType<IClassMarks>(await ClassMarksSchema.findOne({ id }).catch(() => null));
+    const foundClassMarks = toType<IClassMarks>(await ClassMarksSchema.findOne({ subjectId, classId }).catch(() => null));
 
     if (!foundClassMarks) {
       reportError(res, RequestErrors.ClassLack);
@@ -146,10 +146,10 @@ export class ClassMarksRoutes {
     const parsedObject = getClassMarksProps(foundClassMarks);
 
     await ClassMarksSchema.updateOne(
-      { id },
+      { subjectId, classId },
       {
         ...parsedObject,
-        marks: [...parsedObject.marks, { student: studentId, mark, date }],
+        marks: [...parsedObject.marks, { student: studentId, mark }],
       },
     );
 
