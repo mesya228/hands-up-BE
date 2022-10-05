@@ -4,15 +4,31 @@ import {
   IClass,
   IClassMarks,
   ISchool,
+  IStatistics,
   ISubject,
   IUser,
   SchoolSchema,
+  StatisticsSchema,
   SubjectSchema,
   UserSchema,
 } from '../../models';
 import { router } from '../router';
-import { getClassPublicProps, getSimplePublicProps, getUserPublicProps, toType, verifyAccessToken } from '../../utils';
+import {
+  findUser,
+  findUsers,
+  generatePassword,
+  getClassPublicProps,
+  getSimplePublicProps,
+  getUserPublicProps,
+  random,
+  reportError,
+  toType,
+  transcriptPassword,
+  verifyAccessToken,
+} from '../../utils';
 import { Request, Response } from 'express';
+import { RequestErrors } from '../../enums';
+import { v4 as uuidv4 } from 'uuid';
 
 export class UserRoutes {
   private readonly ROUTE_API = '/user';
@@ -27,6 +43,8 @@ export class UserRoutes {
     router.get(`${this.ROUTE_API}/:uuid`, this.getUserById.bind(this));
     router.get(`${this.ROUTE_API}/:uuid/classes`, this.getClassesByUser.bind(this));
     router.get(`${this.ROUTE_API}/:uuid/subjects`, this.getSubjectsByUser.bind(this));
+    router.patch(`${this.ROUTE_API}/:uuid/regenerate-password`, this.regeneratePassword.bind(this));
+    router.post(`${this.ROUTE_API}/add-student`, this.addStudent.bind(this));
   }
 
   /**
@@ -112,9 +130,7 @@ export class UserRoutes {
       return;
     }
 
-    const user = toType<IUser>(
-      await UserSchema.findOne({ uuid }).catch(() => null),
-    );
+    const user = toType<IUser>(await UserSchema.findOne({ uuid }).catch(() => null));
 
     if (!user) {
       res.status(404).send({ errors: ['Користувача не знайдено'] });
@@ -151,7 +167,9 @@ export class UserRoutes {
       return;
     }
 
-    const classMarks = toType<IClassMarks[]>(await ClassMarksSchema.find({ subjectId, teachers: uuid }).catch(() => []));
+    const classMarks = toType<IClassMarks[]>(
+      await ClassMarksSchema.find({ subjectId, teachers: uuid }).catch(() => []),
+    );
 
     const classesId = classMarks?.map((c) => c.classId);
 
@@ -206,5 +224,180 @@ export class UserRoutes {
     res.status(200).send({
       data: subjects.map((subject) => getSimplePublicProps(subject)),
     });
+  }
+
+  /**
+   * Create student
+   *
+   * @param  {Request} req
+   * @param  {Response} res
+   */
+  private async addStudent(req: Request, res: Response) {
+    const { name, surname, classId, subjectId } = req.body || {};
+
+    if (!name || !surname || !classId || !subjectId) {
+      reportError(res, RequestErrors.DataLack);
+      return;
+    }
+
+    const decodedToken = verifyAccessToken(req.headers.authorization, res);
+
+    if (!decodedToken) {
+      return;
+    }
+
+    const teacher = await findUser({ uuid: decodedToken.uuid });
+
+    this.createNewStudent(res, { ...req.body, schoolId: teacher?.school });
+  }
+
+  /**
+   * @param  {Response} res
+   * @param  {string} password
+   * @param  {string} email
+   */
+  private async createNewStudent(res: Response, body: any) {
+    const { name, surname, classId, subjectId, schoolId } = body || {};
+
+    if (!name || !surname || !classId || !subjectId || !schoolId) {
+      reportError(res, RequestErrors.DataLack);
+      return;
+    }
+
+    let { login, password } = this.getLoginAndPassword(name, surname);
+
+    const existedUsers = await findUsers({ login: { $regex: login, $options: 'i' } });
+
+    if (existedUsers.length) {
+      login += existedUsers.length + 1;
+    }
+
+    const hashedPassword = await generatePassword(password);
+
+    const newUser = toType<IUser>(
+      await UserSchema.create({
+        uuid: uuidv4(),
+        login,
+        name,
+        surname,
+        school: schoolId,
+        subjects: [subjectId],
+        classes: [classId],
+        password: transcriptPassword(hashedPassword),
+        roles: ['student'],
+        state: 'registered',
+      }).catch(() => null),
+    );
+
+    if (!newUser) {
+      reportError(res, RequestErrors.SystemError);
+      return;
+    }
+
+    res.status(200).json({
+      data: { ...getUserPublicProps(newUser), password },
+    });
+
+    await this.addStudentToClass(classId, newUser.uuid);
+    await this.createUserStatistics(newUser.uuid);
+  }
+
+  /*
+   * Return generated from name and surname username and password
+   */
+  private getLoginAndPassword(name?: string, surname?: string): { login: string; password: string } {
+    if (!name || !surname) {
+      return {
+        login: '',
+        password: '',
+    };
+  }
+
+    const namePass = name.slice(0, 1).toUpperCase();
+    const splitSymbols = ['_', '.', '-'];
+    const randomSymbol = splitSymbols[random(0, splitSymbols.length - 1)];
+    const surnamePass = surname.charAt(0).toUpperCase() + surname.slice(1);
+    const numbersPass = random(1000, 9999);
+    let login = `${namePass}${surnamePass}`;
+
+    const password = `${namePass}${surnamePass}${randomSymbol}${numbersPass}`;
+
+    return { login, password };
+  }
+
+  /**
+   * Add student to class in DB
+   *
+   * @param  {string} classId
+   * @param  {string} userId
+   */
+  private async addStudentToClass(classId: string, userId: string) {
+    return toType<IClass>(
+      ClassSchema.findOneAndUpdate(
+        { uuid: classId },
+        {
+          $push: {
+            students: userId as any,
+          },
+        },
+      ).catch(() => null),
+    );
+  }
+
+  /**
+   * Add student to class in DB
+   *
+   * @param  {string} classId
+   * @param  {string} userId
+   */
+  private async createUserStatistics(userId: string) {
+    return toType<IStatistics>(StatisticsSchema.create({ uuid: userId }).catch(() => null));
+  }
+
+  /**
+   * Get student password
+   *
+   * @param  {Request} req
+   * @param  {Response} res
+   */
+  private async regeneratePassword(req: Request, res: Response) {
+    const uuid = req.params.uuid;
+    const { classId } = req.query || {};
+
+    if (!classId || !uuid) {
+      return reportError(res, RequestErrors.DataLack);
+    }
+
+    const decodedToken = verifyAccessToken(req.headers.authorization, res);
+
+    if (!decodedToken) {
+      return;
+    }
+
+    const studentClass = toType<IClass>(await ClassSchema.findOne({ students: uuid }));
+    console.log(studentClass);
+
+    if (!studentClass?.students?.includes(uuid)) {
+      return reportError(res, RequestErrors.AccessDenied);
+    }
+    const teacher = await findUser({ uuid: decodedToken.uuid });
+    console.log(teacher);
+    if (!(teacher?.classes as string[]).includes(classId as string)) {
+      return reportError(res, RequestErrors.AccessDenied);
+    }
+
+    const user = await UserSchema.findOne({ uuid }).catch(() => null);
+
+    if (!user) {
+      res.status(404).send({ errors: ['Користовача не знайдено'] });
+      return;
+    }
+
+    const { password } = this.getLoginAndPassword(user?.name, user.surname);
+    console.log(password);
+    const hashedPass = await generatePassword(password);
+    console.log(hashedPass);
+    await UserSchema.updateOne({ uuid }, { password: hashedPass });
+    res.status(200).send({ data: transcriptPassword(password) });
   }
 }

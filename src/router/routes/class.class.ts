@@ -112,7 +112,7 @@ export class ClassRoutes {
       await UserSchema.find({
         classes: classId,
         school: school?.id,
-        role: 'student'
+        roles: 'student'
       }).catch(() => []),
     );
 

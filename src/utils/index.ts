@@ -6,3 +6,4 @@ export * from './toType';
 export * from './random';
 export * from './reportError';
 export * from './achievments';
+export * from './find-user';

@@ -1,14 +1,14 @@
-import { ClassSchema, IClass, IUser, UserSchema, StatisticsSchema, IStatistics } from '../../../models';
+import { IUser, UserSchema } from '../../../models';
 import { router } from '../../router';
 
 import bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
 import {
+  findUser,
   generateAccessToken,
   generatePassword,
   generateToken,
   getUserPublicProps,
-  random,
   reportError,
   toType,
   verifyAccessToken,
@@ -25,7 +25,7 @@ export class AuthRoutes {
 
   private initRoutes() {
     router.post(`${this.ROUTE_API}/sign-in`, this.signIn.bind(this));
-    router.post(`${this.ROUTE_API}/add-student`, this.addStudent.bind(this));
+    router.patch(`${this.ROUTE_API}/restore-password`, this.resetPassword.bind(this));
 
     router.post(`${this.ROUTE_API}/sign-up-start`, this.signUpStart.bind(this));
     router.patch(`${this.ROUTE_API}/sign-up-finish`, this.signUpFinish.bind(this));
@@ -46,13 +46,60 @@ export class AuthRoutes {
       return;
     }
 
-    const user = await this.findUser({ $or: [{ login }, { email: login }] });
-
+    const user = await findUser({ $or: [{ login }, { email: login }] });
+    
     if (user) {
       const isPasswordsMatch = await this.comparePasswords(password, user.password);
+      console.log(isPasswordsMatch);
 
       if (isPasswordsMatch) {
         await this.proceedSignIn(res, user);
+        return;
+      }
+
+      reportError(res, RequestErrors.WrongLoginPassword);
+
+      return;
+    }
+
+    reportError(res, RequestErrors.WrongLoginPassword);
+  }
+
+  /**
+   * Reset password
+   *
+   * @param  {Request} req
+   * @param  {Response} res
+   */
+  private async resetPassword(req: Request, res: Response) {
+    const { login, oldPassword, password } = req.body || {};
+
+    if (!login || !oldPassword || !password) {
+      reportError(res, RequestErrors.DataLack);
+
+      return;
+    }
+
+    const user = (await findUser({ $or: [{ login }, { email: login }] })) as any;
+
+    if (user) {
+      const isTheSamePass = await this.comparePasswords(password, user.password);
+
+      if (isTheSamePass) {
+        reportError(res, RequestErrors.SamePassword);
+        return;
+      }
+
+      const isPasswordsMatch = await this.comparePasswords(oldPassword, user.password);
+      if (isPasswordsMatch) {
+        const hashedPassword = await generatePassword(password);
+
+        user
+          .update({
+            password: hashedPassword,
+          })
+          .catch(() => null);
+
         return;
       }
 
@@ -78,7 +125,7 @@ export class AuthRoutes {
       return;
     }
 
-    const user = await this.findUser({ email });
+    const user = await findUser({ email });
 
     if (user) {
       if (await this.handleSignUpPending(res, user, password)) {
@@ -143,115 +190,6 @@ export class AuthRoutes {
   }
 
   /**
-   * Create student
-   *
-   * @param  {Request} req
-   * @param  {Response} res
-   */
-  private async addStudent(req: Request, res: Response) {
-    const { name, surname, classId, subjectId } = req.body || {};
-
-    if (!name || !surname || !classId || !subjectId) {
-      reportError(res, RequestErrors.DataLack);
-      return;
-    }
-
-    const decodedToken = verifyAccessToken(req.headers.authorization, res);
-
-    if (!decodedToken) {
-      return;
-    }
-
-    const teacher = await this.findUser({ email: decodedToken.email });
-    
-    this.createNewStudent(res, { ...req.body, schoolId: teacher?.school });
-  }
-
-  /**
-   * @param  {Response} res
-   * @param  {string} password
-   * @param  {string} email
-   */
-  private async createNewStudent(res: Response, body: any) {
-    const { name, surname, classId, subjectId, schoolId } = body || {};
-
-    if (!name || !surname || !classId || !subjectId || !schoolId) {
-      reportError(res, RequestErrors.DataLack);
-      return;
-    }
-
-    let { login, password } = this.getLoginAndPassword(name, surname);
-
-    const existedUsers = await this.findUsers({ login: { $regex: login, $options: 'i' } });
-
-    if (existedUsers.length) {
-      login += existedUsers.length + 1;
-    }
-
-    const hashedPassword = await generatePassword(password);
-
-    const newUser = toType<IUser>(
-      await UserSchema.create({
-        uuid: uuidv4(),
-        login,
-        name,
-        surname,
-        school: schoolId,
-        subjects: [subjectId],
-        classes: [classId],
-        password: hashedPassword,
-        roles: ['student'],
-        state: 'registered',
-      }).catch(() => null),
-    );
-
-    if (!newUser) {
-      reportError(res, RequestErrors.SystemError);
-      return;
-    }
-
-    res.status(200).json({
-      data: { ...getUserPublicProps(newUser), password },
-    });
-
-    await this.addStudentToClass(classId, newUser.uuid);
-    await this.createUserStatistics(newUser.uuid);
-  }
-
-  /**
-   * Add student to class in DB
-   * 
-   * @param  {string} classId
-   * @param  {string} userId
-   */
-  private async addStudentToClass(classId: string, userId: string) {
-    return toType<IClass>(
-      ClassSchema.findOneAndUpdate(
-        { uuid: classId },
-        {
-          $push: {
-            students: userId as any,
-          },
-        },
-      ).catch(() => null),
-    );
-  }
-
-  /**
-   * Add student to class in DB
-   * 
-   * @param  {string} classId
-   * @param  {string} userId
-   */
-  private async createUserStatistics(userId: string) {
-    return toType<IStatistics>(
-      StatisticsSchema.create(
-        { uuid: userId },
-      ).catch(() => null),
-    );
-  }
-
-  /**
    * @param  {Response} res
    * @param  {string} password
    * @param  {string} email
@@ -274,36 +212,6 @@ export class AuthRoutes {
     }
 
     this.getRegistrationData(newUser, res);
-  }
-
-  /*
-   * Return generated from name and surname username and password
-   */
-  private getLoginAndPassword(name: string, surname: string): { login: string; password: string } {
-    const namePass = name.slice(0, 1).toUpperCase();
-    const splitSymbols = ['_', '.', '-'];
-    const randomSymbol = splitSymbols[random(0, splitSymbols.length - 1)];
-    const surnamePass = surname.charAt(0).toUpperCase() + surname.slice(1);
-    const numbersPass = random(1000, 9999);
-    let login = `${namePass}${surnamePass}`;
-
-    const password = `${namePass}${surnamePass}${randomSymbol}${numbersPass}`;
-
-    return { login, password };
-  }
-
-  /**
-   * @param  {any} queryObj
-   */
-  private async findUser(queryObj: any): Promise<IUser | null> {
-    return toType<IUser>(await UserSchema.findOne(queryObj).catch(() => null));
-  }
-
-  /**
-   * @param  {any} queryObj
-   */
-  private async findUsers(queryObj: any): Promise<IUser[]> {
-    return toType<IUser[]>(await UserSchema.find(queryObj).catch(() => []));
   }
 
   /**

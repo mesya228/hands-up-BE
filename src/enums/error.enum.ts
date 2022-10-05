@@ -3,6 +3,7 @@ export enum RequestErrors {
   AccessDenied = 'У доступі відмовлено',
   DataLack = 'Не всі дані заповнено',
   WrongLoginPassword = 'Неправильні пошта або пароль',
+  SamePassword = 'Цей пароль вже використовується',
   UserExist = 'Користувач вже зареєстрований',
   UserLack = 'Користувача не знайдено',
   UsersLack = 'Користувачів не знайдено',

@@ -131,7 +131,8 @@ export class ClassMarksRoutes {
       return;
     }
 
-    const foundClassMarks = toType<IClassMarks>(await ClassMarksSchema.findOne({ subjectId, classId }).catch(() => null));
+    const foundClassMarks = toType<IClassMarks>(await ClassMarksSchema.findOne({ subjectId, classId, teachers: decodedToken.uuid }).catch(() => null));
+    console.log(foundClassMarks);
 
     if (!foundClassMarks) {
       reportError(res, RequestErrors.ClassLack);

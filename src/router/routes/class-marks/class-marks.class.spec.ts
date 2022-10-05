@@ -4,7 +4,7 @@ import { ClassMarksRoutes } from './class-marks.class';
 import { RequestErrors } from '../../../enums';
 import { getApp, updateMock } from 'src/helpers';
 import { generateAccessToken } from 'src/utils';
-import { ClassMarksSchema, StatisticsSchema } from 'src/models';
+import { ClassMarksSchema, StatisticsSchema } from '../../../models';
 
 describe('ClassMarksSchema', () => {
   const app = getApp();
