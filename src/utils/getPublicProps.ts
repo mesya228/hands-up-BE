@@ -42,19 +42,19 @@ export const getClassMarksProps = ({ id, classId, subjectId, marks, teachers }: 
   teachers,
 });
 
-export const getStatisticsPublicProps = ({ achievments, subjects }: any) => ({
-  achievments,
+export const getStatisticsPublicProps = ({ achievements, subjects }: any) => ({
+  achievements,
   subjects,
 });
 
-export const getSubjectStatisticsPublicProps = ({ id, name, expirience, level }: any) => ({
+export const getSubjectStatisticsPublicProps = ({ id, name, experience, level }: any) => ({
   id,
   name, 
-  expirience,
+  experience,
   level,
 });
 
-export const getAchievmentsPublicProps = ({ id, name, imageUrl }: any) => ({
+export const getAchievementsPublicProps = ({ id, name, imageUrl }: any) => ({
   id,
   name,
   imageUrl,

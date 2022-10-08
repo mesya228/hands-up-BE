@@ -5,7 +5,7 @@ const statisticsSchema = new Schema({
     type: String,
     require: true,
   },
-  achievments: {
+  achievements: {
     type: Array<Object>,
     require: true,
     default: [],
@@ -21,12 +21,12 @@ export const StatisticsSchema = model('Statistics', statisticsSchema);
 
 export interface IStatistics {
   uuid: string;
-  achievments: string[];
+  achievements: string[];
   subjects: IStatisticSubject[];
 }
 
 export interface IStatisticSubject {
   id: string;
-  expirience: number;
+  experience: number;
   level: number;
 }

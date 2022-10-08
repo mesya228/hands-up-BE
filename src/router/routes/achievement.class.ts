@@ -1,6 +1,6 @@
 import { router } from '../router';
 import {
-  getAchievments,
+  getAchievements,
   getSimplePublicProps,
   reportError,
   toType,
@@ -12,37 +12,37 @@ import { RequestErrors } from '../../enums';
 import { v4 as uuidv4 } from 'uuid';
 
 export class AchievmentRoutes {
-  private readonly ROUTE_API = '/achievments';
+  private readonly ROUTE_API = '/achievements';
 
   constructor() {
     this.initRoutes();
   }
 
   private initRoutes() {
-    router.get(`${this.ROUTE_API}`, this.getAchievments.bind(this));
+    router.get(`${this.ROUTE_API}`, this.getAchievements.bind(this));
     router.post(`${this.ROUTE_API}`, this.createAchievment.bind(this));
   }
 
   /**
-   * Get achievments
+   * Get achievements
    *
    * @param  {Request} req
    * @param  {Response} res
    */
-  private async getAchievments(req: Request, res: Response) {
+  private async getAchievements(req: Request, res: Response) {
     if (!verifyAccessToken(req.headers.authorization, res)) {
       return;
     }
 
-    const achievments = await getAchievments();
+    const achievements = await getAchievements();
 
-    if (!achievments.length) {
-      reportError(res, RequestErrors.AchievmentsLack);
+    if (!achievements.length) {
+      reportError(res, RequestErrors.AchievementsLack);
       return;
     }
 
     res.status(200).send({
-      data: achievments.map((classItem) => getSimplePublicProps(classItem)),
+      data: achievements.map((classItem) => getSimplePublicProps(classItem)),
     });
   }
 

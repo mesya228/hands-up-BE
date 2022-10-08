@@ -1,6 +1,6 @@
 import { AchievmentSchema, IAchievment, IStatistics, ISubject, StatisticsSchema, SubjectSchema } from '../../models';
 import { router } from '../router';
-import { getAchievmentsPublicProps, getStatisticsPublicProps, getSubjectStatisticsPublicProps, toType, verifyAccessToken } from '../../utils';
+import { getAchievementsPublicProps, getStatisticsPublicProps, getSubjectStatisticsPublicProps, toType, verifyAccessToken } from '../../utils';
 import { Request, Response } from 'express';
 import { RequestErrors } from '../../enums';
 
@@ -44,7 +44,7 @@ export class StatisticsRoutes {
       return reportError(RequestErrors.StatisticsLack);
     }
 
-    const achievments = toType<IAchievment[]>(
+    const achievements = toType<IAchievment[]>(
       await AchievmentSchema.find({})
         .lean()
         .catch(() => []),
@@ -64,7 +64,7 @@ export class StatisticsRoutes {
 
     res.status(200).send({
       data: getStatisticsPublicProps({
-        achievments: statistics.achievments.map((achievment: string) => getAchievmentsPublicProps(achievments[achievment])),
+        achievements: statistics.achievements.map((achievment: string) => getAchievementsPublicProps(achievements[achievment])),
         subjects: statistics.subjects.map((subject) => getSubjectStatisticsPublicProps({ ...subject, ...subjects[subject.id] })),
       }),
     });

@@ -1,5 +1,5 @@
 import { router } from '../../router';
-import { getAchievments, getClassMarksProps, reportError, toType, verifyAccessToken } from '../../../utils';
+import { getAchievements, getClassMarksProps, reportError, toType, verifyAccessToken } from '../../../utils';
 import { IClassMarks, ClassMarksSchema, ClassSchema, IClass, UserSchema, StatisticsSchema, IStatistics, IAchievment } from '../../../models';
 import { v4 as uuidv4 } from 'uuid';
 import { Request, Response } from 'express';
@@ -164,8 +164,8 @@ export class ClassMarksRoutes {
   }
 
   /**
-   * Update user statistics expirience and level by subject
-   * By conditions add achievments
+   * Update user statistics experience and level by subject
+   * By conditions add achievements
    * @param  {string} studentId
    * @param  {string} subjectId
    * @param  {number} mark
@@ -175,7 +175,7 @@ export class ClassMarksRoutes {
 
     let updatedSubjects = this.getUpdatedSubjects(userStatistics.subjects, subjectId, mark);
 
-    await this.updateAchievments(userStatistics, updatedSubjects.level, subjectId);
+    await this.updateAchievements(userStatistics, updatedSubjects.level, subjectId);
 
     await (userStatistics as any)
       .updateOne({
@@ -190,15 +190,15 @@ export class ClassMarksRoutes {
    * @param  {number} level
    * @param  {string} subjectId
    */
-  private async updateAchievments(userStatistics: any, level: number, subjectId: string) {
-    const achievments = await getAchievments();
-    const achievment = achievments.find((a: IAchievment) => Number(a?.level) === +level && a.subjectId === subjectId);
+  private async updateAchievements(userStatistics: any, level: number, subjectId: string) {
+    const achievements = await getAchievements();
+    const achievment = achievements.find((a: IAchievment) => Number(a?.level) === +level && a.subjectId === subjectId);
 
     if (achievment) {
       await userStatistics
         .updateOne({
           $addToSet: {
-            achievments: achievment.id,
+            achievements: achievment.id,
           },
         })
         .catch(() => null);
@@ -206,7 +206,7 @@ export class ClassMarksRoutes {
   }
 
   /**
-   * Return updated subject level and expirience statistics
+   * Return updated subject level and experience statistics
    * @param  {any[]} subjects
    * @param  {string} subjectId
    * @param  {number} mark
@@ -219,13 +219,13 @@ export class ClassMarksRoutes {
     const updateSubject = (subjects: any[]) =>
       subjects.map((subject) => {
         if (subject.id === subjectId) {
-          const updatedExpirience = (subject?.expirience || 0) + mark;
+          const updatedExperience = (subject?.experience || 0) + mark;
 
-          updatedLevel = Math.floor(updatedExpirience / (12 + subject.level)) + 1;
+          updatedLevel = Math.floor(updatedExperience / (12 + subject.level)) + 1;
 
           subject = {
             ...subject,
-            expirience: Math.round(updatedExpirience),
+            experience: Math.round(updatedExperience),
             level: updatedLevel,
           };
         }
@@ -239,7 +239,7 @@ export class ClassMarksRoutes {
       updatedSubjects = updateSubject([
         {
           id: subjectId,
-          expirience: 0,
+          experience: 0,
           level: 0,
         },
       ]);
