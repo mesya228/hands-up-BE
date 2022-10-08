@@ -21,13 +21,8 @@ export const StatisticsSchema = model('Statistics', statisticsSchema);
 
 export interface IStatistics {
   uuid: string;
-  achievments: IStatisticAchievment[];
+  achievments: string[];
   subjects: IStatisticSubject[];
-}
-
-export interface IStatisticAchievment {
-  id: string;
-  name: string;
 }
 
 export interface IStatisticSubject {

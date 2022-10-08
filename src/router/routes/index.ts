@@ -7,3 +7,4 @@ export * from './class.class';
 export * from './settings.class';
 export * from './subject.class';
 export * from './achievment.class';
+export * from './statistics.class';

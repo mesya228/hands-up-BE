@@ -171,7 +171,7 @@ export class AuthRoutes {
           school,
           state: 'registered',
         },
-      ).catch(() => null),
+      ).lean().catch(() => null),
     );
 
     if (!user) {

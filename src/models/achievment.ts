@@ -21,10 +21,6 @@ const achievmentSchema = new Schema({
     type: Number,
     require: false,
   },
-  marksInRow: {
-    type: Number,
-    require: false,
-  },
 });
 
 export const AchievmentSchema = model('Achievment', achievmentSchema);
@@ -33,7 +29,7 @@ export interface IAchievment {
   id: string;
   name: string;
   imageUrl: string;
+
   subjectId?: string;
   level?: number;
-  marksInRow?: number;
 }

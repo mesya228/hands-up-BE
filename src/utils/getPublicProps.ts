@@ -1,4 +1,4 @@
-import { IAchievment, IClass, IClassMarks, IUser } from '../models';
+import { IClass, IClassMarks, IUser } from '../models';
 
 export const getUserPublicProps = ({
   uuid,
@@ -42,7 +42,19 @@ export const getClassMarksProps = ({ id, classId, subjectId, marks, teachers }: 
   teachers,
 });
 
-export const getAchievmentsPublicProps = ({ id, name, imageUrl }: IAchievment) => ({
+export const getStatisticsPublicProps = ({ achievments, subjects }: any) => ({
+  achievments,
+  subjects,
+});
+
+export const getSubjectStatisticsPublicProps = ({ id, name, expirience, level }: any) => ({
+  id,
+  name, 
+  expirience,
+  level,
+});
+
+export const getAchievmentsPublicProps = ({ id, name, imageUrl }: any) => ({
   id,
   name,
   imageUrl,

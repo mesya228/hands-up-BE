@@ -394,7 +394,6 @@ export class UserRoutes {
     }
 
     const { password } = this.getLoginAndPassword(user?.name, user.surname);
-    console.log(password);
     const hashedPass = await generatePassword(password);
     console.log(hashedPass);
     await UserSchema.updateOne({ uuid }, { password: hashedPass });
