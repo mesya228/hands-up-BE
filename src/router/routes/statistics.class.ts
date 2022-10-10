@@ -1,6 +1,21 @@
-import { AchievmentSchema, IAchievment, IStatistics, ISubject, StatisticsSchema, SubjectSchema } from '../../models';
+import {
+  AchievmentSchema,
+  ClassSchema,
+  IAchievment,
+  IClass,
+  IStatistics,
+  ISubject,
+  StatisticsSchema,
+  SubjectSchema,
+} from '../../models';
 import { router } from '../router';
-import { getAchievementsPublicProps, getStatisticsPublicProps, getSubjectStatisticsPublicProps, toType, verifyAccessToken } from '../../utils';
+import {
+  getAchievementsPublicProps,
+  getStatisticsPublicProps,
+  getSubjectStatisticsPublicProps,
+  toType,
+  verifyAccessToken,
+} from '../../utils';
 import { Request, Response } from 'express';
 import { RequestErrors } from '../../enums';
 
@@ -65,12 +80,16 @@ export class StatisticsRoutes {
 
     res.status(200).send({
       data: getStatisticsPublicProps({
-        achievements: statistics.achievements.map((achievment: string) => getAchievementsPublicProps(achievements[achievment])),
-        subjects: statistics.subjects.map((subject) => getSubjectStatisticsPublicProps({
-          ...subject,
-          ...subjects[subject.id],
-          experienceGoal: subject.level * 10,
-        })),
+        achievements: statistics.achievements.map((achievment: string) =>
+          getAchievementsPublicProps(achievements[achievment]),
+        ),
+        subjects: statistics.subjects.map((subject) =>
+          getSubjectStatisticsPublicProps({
+            ...subject,
+            ...subjects[subject.id],
+            experienceGoal: subject.level * 10,
+          }),
+        ),
       }),
     });
   }
@@ -82,9 +101,9 @@ export class StatisticsRoutes {
    * @param  {Response} res
    */
   private async getClassLeaderboard(req: Request, res: Response) {
-    const { uuid } = req.params || {};
+    const { classId } = req.params || {};
 
-    if (!uuid) {
+    if (!classId) {
       return reportError(RequestErrors.DataLack);
     }
 
@@ -94,43 +113,28 @@ export class StatisticsRoutes {
       return;
     }
 
-    const statistics = toType<IStatistics>(
-      await StatisticsSchema.findOne({ uuid: decodedToken.uuid })
+    const foundClass = toType<IClass>(
+      await ClassSchema.findOne({ id: classId })
         .lean()
         .catch(() => null),
     );
 
-    if (!statistics) {
-      return reportError(RequestErrors.StatisticsLack);
+    if (!foundClass) {
+      return reportError(RequestErrors.ClassLack);
     }
 
-    const achievements = toType<IAchievment[]>(
-      await AchievmentSchema.find({})
-        .lean()
-        .catch(() => []),
-    ).reduce((obj: any, achievment) => {
-      obj[achievment.id] = achievment;
-      return obj;
-    }, {});
-
-    const subjects = toType<ISubject[]>(
-      await SubjectSchema.find({})
-        .lean()
-        .catch(() => []),
-    ).reduce((obj: any, subject) => {
-      obj[subject.id] = subject;
-      return obj;
-    }, {});
+    const leaderboard = await Promise.all(
+      foundClass.students.map(async (studentId) =>
+        toType<IStatistics>(
+          await StatisticsSchema.findOne({ uuid: studentId })
+            .lean()
+            .catch(() => null),
+        ),
+      ),
+    );
 
     res.status(200).send({
-      data: getStatisticsPublicProps({
-        achievements: statistics.achievements.map((achievment: string) => getAchievementsPublicProps(achievements[achievment])),
-        subjects: statistics.subjects.map((subject) => getSubjectStatisticsPublicProps({
-          ...subject,
-          ...subjects[subject.id],
-          experienceGoal: subject.level * 10,
-        })),
-      }),
+      data: leaderboard.sort(),
     });
   }
 }
