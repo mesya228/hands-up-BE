@@ -13,10 +13,11 @@ export class StatisticsRoutes {
 
   private initRoutes() {
     router.get(`${this.ROUTE_API}/:uuid`, this.getUserStatistics.bind(this));
+    router.get(`${this.ROUTE_API}/:classId/leaderboard`, this.getClassLeaderboard.bind(this));
   }
 
   /**
-   * Find user from token
+   * Get user statistics
    *
    * @param  {Request} req
    * @param  {Response} res
@@ -65,7 +66,70 @@ export class StatisticsRoutes {
     res.status(200).send({
       data: getStatisticsPublicProps({
         achievements: statistics.achievements.map((achievment: string) => getAchievementsPublicProps(achievements[achievment])),
-        subjects: statistics.subjects.map((subject) => getSubjectStatisticsPublicProps({ ...subject, ...subjects[subject.id] })),
+        subjects: statistics.subjects.map((subject) => getSubjectStatisticsPublicProps({
+          ...subject,
+          ...subjects[subject.id],
+          experienceGoal: subject.level * 10,
+        })),
+      }),
+    });
+  }
+
+  /**
+   * Get class leaderboard
+   *
+   * @param  {Request} req
+   * @param  {Response} res
+   */
+  private async getClassLeaderboard(req: Request, res: Response) {
+    const { uuid } = req.params || {};
+
+    if (!uuid) {
+      return reportError(RequestErrors.DataLack);
+    }
+
+    const decodedToken = verifyAccessToken(req.headers.authorization, res);
+
+    if (!decodedToken) {
+      return;
+    }
+
+    const statistics = toType<IStatistics>(
+      await StatisticsSchema.findOne({ uuid: decodedToken.uuid })
+        .lean()
+        .catch(() => null),
+    );
+
+    if (!statistics) {
+      return reportError(RequestErrors.StatisticsLack);
+    }
+
+    const achievements = toType<IAchievment[]>(
+      await AchievmentSchema.find({})
+        .lean()
+        .catch(() => []),
+    ).reduce((obj: any, achievment) => {
+      obj[achievment.id] = achievment;
+      return obj;
+    }, {});
+
+    const subjects = toType<ISubject[]>(
+      await SubjectSchema.find({})
+        .lean()
+        .catch(() => []),
+    ).reduce((obj: any, subject) => {
+      obj[subject.id] = subject;
+      return obj;
+    }, {});
+
+    res.status(200).send({
+      data: getStatisticsPublicProps({
+        achievements: statistics.achievements.map((achievment: string) => getAchievementsPublicProps(achievements[achievment])),
+        subjects: statistics.subjects.map((subject) => getSubjectStatisticsPublicProps({
+          ...subject,
+          ...subjects[subject.id],
+          experienceGoal: subject.level * 10,
+        })),
       }),
     });
   }

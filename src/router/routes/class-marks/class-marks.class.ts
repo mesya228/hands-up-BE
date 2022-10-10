@@ -132,7 +132,6 @@ export class ClassMarksRoutes {
     }
 
     const foundClassMarks = toType<IClassMarks>(await ClassMarksSchema.findOne({ subjectId, classId, teachers: decodedToken.uuid }).catch(() => null));
-    console.log(foundClassMarks);
 
     if (!foundClassMarks) {
       reportError(res, RequestErrors.ClassLack);
@@ -221,12 +220,12 @@ export class ClassMarksRoutes {
         if (subject.id === subjectId) {
           const updatedExperience = (subject?.experience || 0) + mark;
 
-          updatedLevel = Math.floor(updatedExperience / (12 + subject.level)) + 1;
+          updatedLevel = Math.floor(updatedExperience / 10) + 1;
 
           subject = {
             ...subject,
             experience: Math.round(updatedExperience),
-            level: updatedLevel,
+            level: updatedLevel > subject?.level ? updatedLevel : subject?.level,
           };
         }
 

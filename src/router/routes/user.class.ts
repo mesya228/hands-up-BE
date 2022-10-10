@@ -375,13 +375,11 @@ export class UserRoutes {
     }
 
     const studentClass = toType<IClass>(await ClassSchema.findOne({ students: uuid }));
-    console.log(studentClass);
 
     if (!studentClass?.students?.includes(uuid)) {
       return reportError(res, RequestErrors.AccessDenied);
     }
     const teacher = await findUser({ uuid: decodedToken.uuid });
-    console.log(teacher);
     if (!(teacher?.classes as string[]).includes(classId as string)) {
       return reportError(res, RequestErrors.AccessDenied);
     }
@@ -395,7 +393,6 @@ export class UserRoutes {
 
     const { password } = this.getLoginAndPassword(user?.name, user.surname);
     const hashedPass = await generatePassword(password);
-    console.log(hashedPass);
     await UserSchema.updateOne({ uuid }, { password: hashedPass });
     res.status(200).send({ data: transcriptPassword(password) });
   }

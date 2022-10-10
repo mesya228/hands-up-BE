@@ -47,10 +47,11 @@ export const getStatisticsPublicProps = ({ achievements, subjects }: any) => ({
   subjects,
 });
 
-export const getSubjectStatisticsPublicProps = ({ id, name, experience, level }: any) => ({
+export const getSubjectStatisticsPublicProps = ({ id, name, experience, experienceGoal, level }: any) => ({
   id,
   name, 
   experience,
+  experienceGoal,
   level,
 });
 

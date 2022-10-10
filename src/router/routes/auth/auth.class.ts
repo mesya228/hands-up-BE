@@ -50,7 +50,6 @@ export class AuthRoutes {
     
     if (user) {
       const isPasswordsMatch = await this.comparePasswords(password, user.password);
-      console.log(isPasswordsMatch);
 
       if (isPasswordsMatch) {
         await this.proceedSignIn(res, user);
