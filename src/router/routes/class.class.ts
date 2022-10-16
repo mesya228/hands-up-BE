@@ -135,7 +135,7 @@ export class ClassRoutes {
     res.status(200).send({
       data: {
         ...getClassPublicProps(classData),
-        students: parsedUsers,
+        students: parsedUsers.sort((a: any, b: any) => `${a?.name} ${a?.surname}`.localeCompare(`${b?.name} ${b?.surname}`)),
       },
     });
   }
