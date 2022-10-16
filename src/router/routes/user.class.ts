@@ -45,6 +45,7 @@ export class UserRoutes {
     router.get(`${this.ROUTE_API}/:uuid/subjects`, this.getSubjectsByUser.bind(this));
     router.patch(`${this.ROUTE_API}/:uuid/regenerate-password`, this.regeneratePassword.bind(this));
     router.post(`${this.ROUTE_API}/add-student`, this.addStudent.bind(this));
+    router.delete(`${this.ROUTE_API}/:uuid`, this.deleteStudent.bind(this));
   }
 
   /**
@@ -223,6 +224,52 @@ export class UserRoutes {
 
     res.status(200).send({
       data: subjects.map((subject) => getSimplePublicProps(subject)),
+    });
+  }
+
+  /**
+   * Create student
+   *
+   * @param  {Request} req
+   * @param  {Response} res
+   */
+  private async deleteStudent(req: Request, res: Response) {
+    const { uuid } = req.params || {};
+
+    if (!uuid) {
+      reportError(res, RequestErrors.DataLack);
+      return;
+    }
+
+    const decodedToken = verifyAccessToken(req.headers.authorization, res);
+
+    if (!decodedToken) {
+      return;
+    }
+
+    const user = toType<IUser>(await UserSchema.findOne({ uuid }));
+
+    const classes = await ClassSchema.find({});
+    classes.forEach(async (classItem) => {
+      if (!user?.classes?.includes(classItem.id)) {
+        return;
+      }
+
+      await classItem.updateOne(
+        {
+          students: {
+            $pull: uuid
+          }
+        }
+      );
+    });
+
+    await StatisticsSchema.findOneAndDelete({ uuid });
+
+    await UserSchema.findOneAndDelete({ uuid });
+
+    res.status(200).json({
+      data: { success: true },
     });
   }
 
