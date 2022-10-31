@@ -40,8 +40,8 @@ export const verifyAccessToken = (
  * Check token access rules
  *
  * @param  {Response} res
- * @param  {string} compareId?
- * @param  {boolean} registrationState?
+ * @param  {any} config?
+ * @param  {ITokenPayload} decodedToken?
  */
 const checkTokenAccess = (res: Response, config: any, decodedToken: ITokenPayload) => {
   const { registrationState, compareId, adminRequest } = config;
