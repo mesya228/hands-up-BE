@@ -15,7 +15,11 @@ app.listen(PORT, () => {
   app.use(express.json());
   app.use(
     cors({
-      origin: ['http://localhost:4200'],
+      origin: [
+        'http://localhost:4200',
+        'https://handsup-63bb3.web.app',
+        'https://hands-up.vercel.app',
+      ],
     }),
   );
   app.use(formData.parse({}));
