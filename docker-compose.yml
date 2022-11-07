@@ -1,11 +1,11 @@
 version: '3'
 services:
-  Nodejs:
+  handsupNode:
     build:
       context: .
       dockerfile: Dockerfile
-    image: Nodejs
-    container_name: Nodejs
+    image: handsupNode
+    container_name: handsupNode
     restart: unless-stopped
     networks:
       - app-network
@@ -23,7 +23,7 @@ services:
       - certbot-var:/var/lib/letsencrypt
       - dhparam:/etc/ssl/certs
     depends_on:
-      - Nodejs
+      - handsupNode
     networks:
       - app-network
   certbot:
