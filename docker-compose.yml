@@ -36,15 +36,6 @@ services:
     depends_on:
       - webserver
     command: certonly --webroot --webroot-path=/var/www/html --email a.dydyluk@gmail.com --agree-tos --no-eff-email --staging -d handup-api.com
-volumes:
-  certbot-etc:
-  certbot-var:
-  web-root:
-    driver: local
-    driver_opts:
-      type: none
-      device: /home/ubuntu/hands-up-BE/views/
-      o: bind
   dhparam:
     driver: local
     driver_opts:
