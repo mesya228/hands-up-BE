@@ -110,11 +110,6 @@ export class UserRoutes {
       }),
     );
 
-    if (!users?.length) {
-      res.status(404).send({ errors: ['Користувача не знайдено'] });
-      return;
-    }
-
     res.status(200).send({ data: users.map((user) => getUserPublicProps(user)) });
   }
 
@@ -180,11 +175,6 @@ export class UserRoutes {
       }).catch(() => []),
     );
 
-    if (!classes?.length) {
-      res.status(404).send({ errors: ['Класи не знайдено'] });
-      return;
-    }
-
     res.status(200).send({
       data: classes.map((classItem) => getClassPublicProps(classItem)),
     });
@@ -216,11 +206,6 @@ export class UserRoutes {
         },
       }).catch(() => []),
     );
-
-    if (!subjects?.length) {
-      res.status(404).send({ errors: ['Предмети не знайдено'] });
-      return;
-    }
 
     res.status(200).send({
       data: subjects.map((subject) => getSimplePublicProps(subject)),
@@ -254,19 +239,19 @@ export class UserRoutes {
       if (!user?.classes?.includes(classItem.id)) {
         return;
       }
-
-      await classItem.updateOne(
-        { uuid },
+      
+      await ClassSchema.findOneAndUpdate(
+        { id: classItem.id },
         {
           $pull: {
-            students: uuid
+            students: uuid as any,
           }
         }
       );
     });
 
     await StatisticsSchema.findOneAndDelete({ uuid });
-
+    
     await UserSchema.findOneAndDelete({ uuid });
 
     res.status(200).json({

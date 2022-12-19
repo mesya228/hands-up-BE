@@ -116,13 +116,9 @@ export class ClassRoutes {
       }).catch(() => []),
     );
 
-    if (!users?.length) {
-      reportError(res, RequestErrors.UsersLack);
-      return;
-    }
-
     const parsedUsers: IUser[] = [];
 
+    // TODO make sure it works
     if (school) {
       users.forEach((user: any) => {
         const publicUser = getUserPublicProps(user);

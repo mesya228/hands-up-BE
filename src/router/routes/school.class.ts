@@ -35,11 +35,6 @@ export class SchoolRoutes {
       }).catch(() => []),
     );
 
-    if (!schools?.length) {
-      res.status(404).send({ errors: ['Школу не знайдено'] });
-      return;
-    }
-
     res.status(200).send({
       data: schools.map((school) => getSimplePublicProps(school)),
     });

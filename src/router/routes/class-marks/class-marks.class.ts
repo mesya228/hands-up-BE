@@ -40,11 +40,6 @@ export class ClassMarksRoutes {
       await ClassMarksSchema.find({ $or: [{ subjectId }, { classId }] }).catch(() => []),
     );
 
-    if (!classMarks?.length) {
-      reportError(res, RequestErrors.ClassLack);
-      return;
-    }
-
     res.status(200).send({
       data: getClassMarksProps(classMarks[0]),
     });

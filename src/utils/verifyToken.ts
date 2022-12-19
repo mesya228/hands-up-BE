@@ -48,7 +48,7 @@ const checkTokenAccess = (res: Response, config: any, decodedToken: ITokenPayloa
 
   if (
     (!registrationState && decodedToken?.state === 'pending') ||
-    (registrationState && decodedToken?.state === 'complete')
+    (registrationState && decodedToken?.state === 'registered')
   ) {
     res.status(400).send({ errors: ['Реєстрацію не завершено'] });
     return true;

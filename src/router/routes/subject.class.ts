@@ -41,11 +41,6 @@ export class SubjectRoutes {
       }).catch(() => []),
     );
 
-    if (!foundSubjects?.length) {
-      res.status(400).send({ errors: ['Немає предметів з такою назвою'] });
-      return;
-    }
-
     res.status(200).send({ data: foundSubjects?.map((subject) => getSimplePublicProps(subject)) });
   }
 
