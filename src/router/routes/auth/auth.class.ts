@@ -47,7 +47,7 @@ export class AuthRoutes {
     }
 
     const user = await findUser({ $or: [{ login }, { email: login }] });
-    
+
     if (user) {
       const isPasswordsMatch = await this.comparePasswords(password, user.password);
 
@@ -169,8 +169,11 @@ export class AuthRoutes {
           thirdname,
           school,
           state: 'registered',
+          subjects: ['b1429875-4b3b-4537-b11b-980575c7d3ec'],
         },
-      ).lean().catch(() => null),
+      )
+        .lean()
+        .catch(() => null),
     );
 
     if (!user) {
@@ -178,7 +181,7 @@ export class AuthRoutes {
       return;
     }
 
-    const token = await generateToken(user).catch(() => null);
+    const token = await generateToken({ ...user, state: 'registered' }).catch(() => null);
 
     res.status(200).send({
       data: {

@@ -89,6 +89,13 @@ export class ClassMarksRoutes {
       reportError(res, RequestErrors.SystemError);
     }
 
+    await UserSchema.findOneAndUpdate({ uuid: id }, {
+      $addToSet: {
+        classes: classId,
+        subjects: subjectId,
+      },
+    });
+
     const foundClass = toType<IClass>(ClassSchema.find({ id: classId }).catch(() => null));
 
     foundClass.students?.forEach(async (student) => {
