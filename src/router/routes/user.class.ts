@@ -256,9 +256,10 @@ export class UserRoutes {
       }
 
       await classItem.updateOne(
+        { uuid },
         {
-          students: {
-            $pull: uuid
+          $pull: {
+            students: uuid
           }
         }
       );
