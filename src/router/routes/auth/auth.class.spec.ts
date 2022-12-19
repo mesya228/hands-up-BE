@@ -1,5 +1,5 @@
 import { getApp } from 'src/helpers';
-import { ClassSchema, UserSchema } from 'src/models';
+import { ClassSchema, UserSchema } from '../../../models';
 import { UserToken } from 'src/models/token';
 import { generateAccessToken, generatePassword } from 'src/utils';
 import { AuthRoutes } from './auth.class';

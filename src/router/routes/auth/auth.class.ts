@@ -1,4 +1,4 @@
-import { IUser, UserSchema } from '../../../models';
+import { IUser, UserSchema, UserStates } from '../../../models';
 import { router } from '../../router';
 
 import bcrypt from 'bcrypt';
@@ -8,7 +8,6 @@ import {
   generateAccessToken,
   generatePassword,
   generateToken,
-  getUserPublicProps,
   reportError,
   toType,
   verifyAccessToken,
@@ -167,9 +166,9 @@ export class AuthRoutes {
           name,
           surname,
           thirdname,
-          school,
-          state: 'registered',
-          subjects: ['b1429875-4b3b-4537-b11b-980575c7d3ec'],
+          school: '30a5d6d2-fe32-4fbb-9ca9-36d1b2eea11f', // TODO fix default school
+          state: UserStates.registered,
+          subjects: ['b1429875-4b3b-4537-b11b-980575c7d3ec'], // TODO fix default subject
         },
       )
         .lean()
@@ -181,11 +180,11 @@ export class AuthRoutes {
       return;
     }
 
-    const token = await generateToken({ ...user, state: 'registered' }).catch(() => null);
+    const token = await generateToken({ ...user, state: UserStates.registered }).catch(() => null);
 
     res.status(200).send({
       data: {
-        user: getUserPublicProps(user),
+        user: { uuid: user.uuid },
         token,
       },
     });
@@ -230,7 +229,7 @@ export class AuthRoutes {
 
     if (token) {
       res.status(200).json({
-        data: { user: getUserPublicProps(user), token },
+        data: { user: { uuid: user.uuid }, token },
       });
 
       return;

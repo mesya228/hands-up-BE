@@ -11,6 +11,7 @@ import {
   StatisticsSchema,
   SubjectSchema,
   UserSchema,
+  UserStates,
 } from '../../models';
 import { router } from '../router';
 import {
@@ -318,7 +319,7 @@ export class UserRoutes {
         classes: [classId],
         password: transcriptPassword(hashedPassword),
         roles: ['student'],
-        state: 'registered',
+        state: UserStates.registered,
       }).catch(() => null),
     );
 

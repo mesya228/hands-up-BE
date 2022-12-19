@@ -4,6 +4,11 @@ import { IClass } from './class';
 import { ISchool } from './school';
 import { ISubject } from './subject';
 
+export enum UserStates {
+  registered = 'registered',
+  pending = 'pending',
+}
+
 const userSchema = new Schema({
   uuid: {
     type: String,
@@ -21,7 +26,7 @@ const userSchema = new Schema({
   },
   state: {
     type: String,
-    enum: ['started', 'pending', 'registered'],
+    enum: [UserStates.pending, UserStates.registered],
     default: 'pending',
     require: false,
   },
@@ -61,6 +66,10 @@ const userSchema = new Schema({
     require: true,
     type: Array<String>,
   },
+  gender: {
+    require: false,
+    type: String,
+  },
 });
 
 export const UserSchema = model('User', userSchema);
@@ -77,7 +86,8 @@ export interface IUser {
   thirdname?: string;
   login?: string;
 
-  state?: 'registered' | 'pending';
+  state?: UserStates;
+  gender?: string;
   school?: string | ISchool;
   classes?: string[] | IClass[];
   subjects?: string[] | ISubject[];

@@ -4,6 +4,7 @@ import { Response } from 'express';
 import { RequestErrors, TokenErrors, UserRoles } from '../enums';
 import { ITokenPayload } from 'src/interfaces';
 import { reportError } from './reportError';
+import { UserStates } from '../models';
 
 export const verifyAccessToken = (
   accessToken: string | undefined,
@@ -47,8 +48,8 @@ const checkTokenAccess = (res: Response, config: any, decodedToken: ITokenPayloa
   const { registrationState, compareId, adminRequest } = config;
 
   if (
-    (!registrationState && decodedToken?.state === 'pending') ||
-    (registrationState && decodedToken?.state === 'registered')
+    (!registrationState && decodedToken?.state === UserStates.pending) ||
+    (registrationState && decodedToken?.state === UserStates.registered)
   ) {
     res.status(400).send({ errors: ['Реєстрацію не завершено'] });
     return true;

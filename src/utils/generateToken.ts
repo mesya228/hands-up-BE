@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { ITokenPayload } from 'src/interfaces';
-import { IUser } from '../../src/models';
+import { IUser } from '../models';
 import { UserToken } from '../models/token';
 
 export const generateToken = async (user: IUser) => {
